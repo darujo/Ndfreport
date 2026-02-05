@@ -26,7 +26,7 @@ public class Revenue {
     @Column(name = "timestamp")
     private Timestamp timestamp; // Date/Time (Дата/Время)
     @Column(name = "quantity")
-    private Integer quantity; // Quantity (Количество)
+    private Double quantity; // Quantity (Количество)
     @Column(name = "price")
     private Double price; // T. Price (Цена транзакции)
     @Column(name = "commission")

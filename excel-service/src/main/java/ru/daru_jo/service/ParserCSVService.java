@@ -50,7 +50,7 @@ public class ParserCSVService {
             // file reader as a parameter
             CSVReader csvReader = new CSVReader(filereader);
             String[] nextRecord;
-            Order order = orderService.saveOrder(new Order(null, userNik, new Timestamp(System.currentTimeMillis())));
+            Order order = orderService.saveOrder(new Order(userNik));
             // we are going to read data line by line
             while ((nextRecord = csvReader.readNext()) != null) {
                 parserLine(order, nextRecord);
@@ -75,6 +75,21 @@ public class ParserCSVService {
                 } else if (nextRecord[2].equals("ClosedLot")) {
                     saveExpenditure(order, nextRecord);
                 }
+            } else if (nextRecord[0].equals("Statement")
+                    && nextRecord[1].equals("Data")
+                    && nextRecord[2].equals("Period")
+            ) {
+                String[] period = nextRecord[3].split(" ");
+                if (period.length > 3) {
+                    order.setYear(period[2]);
+                }
+            } else if (nextRecord[0].equals("Информация о счете") || nextRecord[0].equals("Account Information")) {
+                if (nextRecord[1].equals("Data")
+                        && (nextRecord[2].equals("Account")
+                        || nextRecord[2].equals("Счет"))) {
+                    order.setAccount(nextRecord[3]);
+                }
+
             }
         }
     }
@@ -93,7 +108,7 @@ public class ParserCSVService {
                     record[4],
                     record[5],
                     Timestamp.valueOf(record[6].substring(0, 10) + record[6].substring(11)),
-                    -1 * Integer.parseInt(record[8]),
+                    -1 * Double.parseDouble(record[8]),
                     Double.parseDouble(record[9]),
                     Double.parseDouble(record[12]),
                     order);
@@ -102,9 +117,9 @@ public class ParserCSVService {
 //            log.error(e.getMessage());
             for (String cell : record) {
 
-                    System.out.print(cell + "\t");
-                }
-                System.out.println();
+                System.out.print(cell + "\t");
+            }
+            System.out.println();
         }
     }
 
@@ -117,9 +132,9 @@ public class ParserCSVService {
                     record[4],
                     record[5],
                     Timestamp.valueOf(record[6] + " 00:00:00"),
-                    Integer.parseInt(record[8]),
+                    Double.parseDouble(record[8]),
                     Double.parseDouble(record[9]),
-//                Float.parseFloat(record[12]),
+                    record[12].isBlank() ? null : Double.parseDouble(record[12]),
                     order);
             expenditureService.save(expenditure);
         } catch (Exception e) {

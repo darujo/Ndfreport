@@ -1,14 +1,12 @@
 package ru.daru_jo.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Data
 @Entity
 @Table(name = "order_ndfl")
@@ -23,4 +21,15 @@ public class Order {
 
     @Column(name = "timestamp")
     private Timestamp timestamp;
+
+    @Column(name = "account")
+    private String account;
+
+    @Column(name = "year")
+    private String year;
+
+    public Order(String userNik) {
+        this.userNik = userNik;
+        this.timestamp = new Timestamp(System.currentTimeMillis());
+    }
 }

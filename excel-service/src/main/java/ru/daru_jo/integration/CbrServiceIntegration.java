@@ -26,10 +26,11 @@ public class CbrServiceIntegration {
     public void setWebClientCbr(WebClient webClientCbr) {
         this.webClientCbr = webClientCbr;
     }
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
     public ValCurs userVacationStart(Date date) {
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
 //        addTeg(stringBuilder,"nikName",nikName);
 //        addTeg(stringBuilder,"day",day);
 

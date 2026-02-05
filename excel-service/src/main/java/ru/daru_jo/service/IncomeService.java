@@ -5,16 +5,13 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.daru_jo.dto.ValCurs;
 import ru.daru_jo.entity.CursVal;
 import ru.daru_jo.entity.Expenditure;
 import ru.daru_jo.entity.Order;
 import ru.daru_jo.entity.Revenue;
 import ru.daru_jo.helper.ExcelHelper;
-import ru.daru_jo.integration.CbrServiceIntegration;
 import ru.daru_jo.model.*;
 
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,13 +37,6 @@ public class IncomeService {
         this.service = service;
     }
 
-    private CbrServiceIntegration serviceIntegration;
-
-    @Autowired
-    public void setServiceIntegration(CbrServiceIntegration serviceIntegration) {
-        this.serviceIntegration = serviceIntegration;
-    }
-
     private ValuteService valuteService;
 
     @Autowired
@@ -56,7 +46,6 @@ public class IncomeService {
 
     @PostConstruct
     public void init() {
-        ValCurs valCurs = serviceIntegration.userVacationStart(new Timestamp(System.currentTimeMillis()));
         Order order = service.readDataLineByLine("Daru", "c:\\11\\csv\\eng.csv");
         dump("ss.xlsx", order);
     }
@@ -125,7 +114,7 @@ public class IncomeService {
         });
     }
     private ExpenditureModel getExpenditureModel(Revenue revenueCommission) {
-        ExpenditureModel expenditureModel = new ExpenditureModel(revenueCommission.getTimestamp(), revenueCommission.getQuantity(), revenueCommission.getCommission(), revenueCommission.getCurrencyCode(), "Основные 1530, 1535", "Комиссия за продажу");
+        ExpenditureModel expenditureModel = new ExpenditureModel(revenueCommission.getTimestamp(), revenueCommission.getQuantity(),  revenueCommission.getCurrencyCode(), "Основные 1530, 1535", "Комиссия за продажу",revenueCommission.getCommission());
         updateMovement(expenditureModel);
         return expenditureModel;
     }
@@ -312,7 +301,7 @@ public class IncomeService {
     }
 
 
-    private static void addCell(Row row, int cellStart, Integer integer, CellStyle style) {
+    private static void addCell(Row row, int cellStart, Double integer, CellStyle style) {
         Cell cell = row.createCell(cellStart);
         cell.setCellStyle(style);
         cell.setCellValue(integer);

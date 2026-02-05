@@ -1,5 +1,7 @@
 package ru.daru_jo.service;
 
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -11,8 +13,10 @@ import ru.daru_jo.repository.CursValRepository;
 import ru.daru_jo.specifications.Specifications;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Service
+@Slf4j
 public class ValuteService {
     private CursValRepository cursValRepository;
 
@@ -28,37 +32,59 @@ public class ValuteService {
         this.serviceIntegration = serviceIntegration;
     }
 
-    public void save(CursVal cursVal){
-       CursVal cursValSave =  getCursVal(cursVal.getCharCode(),cursVal.getTimestamp());
-       if(cursValSave!= null){
-           cursVal.setId(cursValSave.getId());
-       }
-       cursValRepository.save(cursVal);
+    @PostConstruct
+    public void init() {
+//        LocalDate date = LocalDate.now();
+//        log.info("Удаление курсов ");
+//        cursValRepository.deleteAll();
+//        log.info("Загрузка курсов валют");
+//
+//        long curTime = System.nanoTime();
+//        int days = 365 * 4 + 1;
+//        for (int i = 0; i < days; i++) {
+//            loadValCurs(Timestamp.valueOf(date.atStartOfDay()));
+//            log.info("Загружен {}", date);
+//            date = date.minusDays(1l);
+//
+//        }
+//        float time_last = (curTime - System.nanoTime()) * 0.000000001f;
+//        log.info("Время выполнения loadValCurs {} за {}", time_last, days);
+
     }
-    private final CursVal cursValRub = new CursVal(null,"810","RUB",1L,"Российские рубли",1d,1d,null,null);
-    public CursVal getCursVal(String charCode, Timestamp timestamp){
-        if (charCode.equals("RUB")){
+
+    public void save(CursVal cursVal) {
+        CursVal cursValSave = getCursVal(cursVal.getCharCode(), cursVal.getTimestamp());
+        if (cursValSave != null) {
+            cursVal.setId(cursValSave.getId());
+        }
+        cursValRepository.save(cursVal);
+    }
+
+    private final CursVal cursValRub = new CursVal(null, "810", "RUB", 1L, "Российские рубли", 1d, 1d, null, null);
+
+    public CursVal getCursVal(String charCode, Timestamp timestamp) {
+        if (charCode.equals("RUB")) {
             return cursValRub;
         }
 
         Specification<CursVal> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"charCode",charCode);
-        specification = Specifications.eq(specification,"timestamp",timestamp);
+        specification = Specifications.eq(specification, "charCode", charCode);
+        specification = Specifications.eq(specification, "timestamp", timestamp);
         return cursValRepository.findOne(specification).orElse(null);
     }
 
-    public CursVal getCursValAnaUpdate(String charCode, Timestamp timestamp){
-        CursVal cursVal = getCursVal(charCode,timestamp);
-        if (cursVal != null){
+    public CursVal getCursValAnaUpdate(String charCode, Timestamp timestamp) {
+        CursVal cursVal = getCursVal(charCode, timestamp);
+        if (cursVal != null) {
             return cursVal;
         } else {
             loadValCurs(timestamp);
-            return getCursVal(charCode,timestamp);
+            return getCursVal(charCode, timestamp);
 
         }
     }
 
-    public void loadValCurs(Timestamp timestamp){
+    public void loadValCurs(Timestamp timestamp) {
         ValCurs valCurs = serviceIntegration.userVacationStart(timestamp);
         valCurs.getValuteList().forEach(valute -> save(ValCursConverter.getCursVal(timestamp, valute)));
     }

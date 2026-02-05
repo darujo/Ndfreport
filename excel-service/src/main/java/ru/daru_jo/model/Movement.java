@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 public class Movement {
     private final Timestamp timestamp;
     private final Double price;
-    private final Integer quantity;
+    private final Double quantity;
     private final Double amountInCur;
     @Setter
     private String currencyCode = "";
@@ -24,7 +24,7 @@ public class Movement {
 
     public Movement(Timestamp timestamp,
                     Double price,
-                    Integer quantity,
+                    Double quantity,
                     String currencyName,
                     String code,
                     String typeOf) {
@@ -37,11 +37,11 @@ public class Movement {
         this.typeOf = typeOf;
     }
     public Movement(Timestamp timestamp,
-                    Integer quantity,
-                    Double amountInCur,
+                    Double quantity,
                     String currencyName,
                     String code,
-                    String typeOf) {
+                    String typeOf,
+                    Double amountInCur) {
         this.timestamp = timestamp;
         this.price = null;
         this.quantity = quantity;
