@@ -9,11 +9,12 @@ import ru.daru_jo.converter.ValCursConverter;
 import ru.daru_jo.dto.ValCurs;
 import ru.daru_jo.entity.CursVal;
 import ru.daru_jo.integration.CbrServiceIntegration;
+import ru.daru_jo.model.CurrencyModel;
 import ru.daru_jo.repository.CursValRepository;
 import ru.daru_jo.specifications.Specifications;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
+
 
 @Service
 @Slf4j
@@ -32,8 +33,10 @@ public class ValuteService {
         this.serviceIntegration = serviceIntegration;
     }
 
+
     @PostConstruct
     public void init() {
+
 //        LocalDate date = LocalDate.now();
 //        log.info("Удаление курсов ");
 //        cursValRepository.deleteAll();
@@ -50,6 +53,18 @@ public class ValuteService {
 //        float time_last = (curTime - System.nanoTime()) * 0.000000001f;
 //        log.info("Время выполнения loadValCurs {} за {}", time_last, days);
 
+    }
+
+    public void updateCurrObject(CurrencyModel currencyModel) {
+        CursVal cursVal = getCursValAnaUpdate(currencyModel.getCurrencyName(), currencyModel.getTimestamp());
+        if (cursVal == null) {
+            //todo доделать чтобы валюта была
+            throw new RuntimeException("Эх цб " + currencyModel.getCurrencyName() + currencyModel.getTimestamp());
+        }
+        // "currencyCode,course, amount"
+        currencyModel.setCurrencyCode(cursVal.getNumCode());
+        currencyModel.setCourse(cursVal.getValUnitRate());
+        currencyModel.setAmount(currencyModel.getAmountInCur() * cursVal.getValUnitRate());
     }
 
     public void save(CursVal cursVal) {
@@ -89,9 +104,10 @@ public class ValuteService {
         valCurs.getValuteList().forEach(valute -> save(ValCursConverter.getCursVal(timestamp, valute)));
     }
 
-//    public void delete(CursVal cursVal){
-//        cursValRepository.delete(cursVal);
-//    }
-
-
+    public static String getCountry(String currency) {
+        if ("840".equals(currency)){
+            return "USA";
+        }
+        return currency;
+    }
 }

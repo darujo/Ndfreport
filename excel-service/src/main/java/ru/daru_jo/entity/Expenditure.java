@@ -12,13 +12,15 @@ import java.sql.Timestamp;
 @Data
 @Entity
 @Table(name = "expenditure")
-public class Expenditure {
+public class Expenditure implements Movement {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "category")
     private String category; // Asset Category (Класс актива)
+    @Column(name = "type")
+    private String type; // Asset Category (Класс актива)
     @Column(name = "currencyCode")
     private String currencyCode; //Currency (Валюта)
     @Column(name = "companyName")

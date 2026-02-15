@@ -11,8 +11,8 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Data
 @Entity
-@Table(name = "coupon")
-public class Coupon {
+@Table(name = "coupon_nkd")
+public class CouponNKD {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
