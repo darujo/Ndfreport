@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.daru_jo.entity.*;
-import ru.daru_jo.model.AssetType;
+import ru.daru_jo.type.AssetType;
 
 import java.io.FileReader;
 import java.sql.Timestamp;

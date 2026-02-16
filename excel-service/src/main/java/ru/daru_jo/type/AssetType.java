@@ -1,4 +1,4 @@
-package ru.daru_jo.model;
+package ru.daru_jo.type;
 
 public enum AssetType {
     //Фондовый рынок: ценные бумаги, обращающиеся на рынке

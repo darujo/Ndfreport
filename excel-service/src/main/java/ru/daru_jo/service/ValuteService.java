@@ -1,6 +1,7 @@
 package ru.daru_jo.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
@@ -55,7 +56,7 @@ public class ValuteService {
 
     }
 
-    public void updateCurrObject(CurrencyModel currencyModel) {
+    public void updateCurrObject(@NonNull CurrencyModel currencyModel) {
         CursVal cursVal = getCursValAnaUpdate(currencyModel.getCurrencyName(), currencyModel.getTimestamp());
         if (cursVal == null) {
             //todo доделать чтобы валюта была

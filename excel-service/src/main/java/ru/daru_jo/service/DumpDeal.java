@@ -7,6 +7,10 @@ import org.springframework.stereotype.Service;
 import ru.daru_jo.entity.*;
 import ru.daru_jo.helper.ExcelHelper;
 import ru.daru_jo.model.*;
+import ru.daru_jo.type.AssetType;
+import ru.daru_jo.type.ColorImp;
+import ru.daru_jo.type.DealType;
+import ru.daru_jo.type.OperationType;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -19,6 +23,7 @@ public class DumpDeal {
     private RevenueService revenueService;
     private ExpenditureService expenditureService;
     private ValuteService valuteService;
+
     @Autowired
     public void setRevenueService(RevenueService revenueService) {
         this.revenueService = revenueService;
@@ -40,16 +45,18 @@ public class DumpDeal {
         revenueList.forEach(revenue -> {
             Map<String, Deal> dealList = mapDeal.computeIfAbsent(revenue.getCategory(), k -> new LinkedHashMap<>());
             Deal deal = dealList.computeIfAbsent(revenue.getCompanyName(), k -> new Deal(revenue.getCompanyName(), new LinkedList<>(), new LinkedList<>()));
-            RevenueModel revenueModel = getRevenueModel(revenue);
+            RevenueModel revenueModel = getRevenueModel(revenue, OperationType.SALE);
             deal.getRevenueList().add(revenueModel);
 
         });
-        expenditureService.findAll(order).forEach(expenditure -> dumpMon(expenditure, mapDeal));
-        revenueList.forEach(revenue -> dumpMon(revenue, mapDeal));
+        expenditureService.findAll(order).forEach(expenditure -> dumpMon(expenditure, mapDeal, OperationType.BUY));
+
+        expenditureService.findAll(order).forEach(expenditure -> dumpMon(expenditure, mapDeal, OperationType.COMMISSION_BUY));
+        revenueList.forEach(revenue -> dumpMon(revenue, mapDeal, OperationType.COMMISSION_SALE));
 
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
-        cell.setCellValue(String.format("Раздел 1. Доходы от операций с ценными бумагами и иными финансовыми инструментами за период 01/01/%s - 31/12/%s ",order.getYear(), order.getYear()));
+        cell.setCellValue(String.format("Раздел 1. Доходы от операций с ценными бумагами и иными финансовыми инструментами за период 01/01/%s - 31/12/%s ", order.getYear(), order.getYear()));
         cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.HEAD), IncomeService.getFont(wb, IndexedColors.WHITE, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
         sheet.addMergedRegion(new CellRangeAddress(0, 2, 0, 17));
         row = sheet.createRow(3);
@@ -58,44 +65,57 @@ public class DumpDeal {
         cell.setCellStyle(IncomeService.getCellStyleColor(wb, null, IncomeService.getFont(wb, (short) 9), HorizontalAlignment.LEFT, VerticalAlignment.CENTER, true));
         sheet.addMergedRegion(new CellRangeAddress(3, 5, 0, 17));
 
-        dump(wb, sheet, mapDeal);
+        dump(wb, sheet, mapDeal, order.getAccount());
     }
 
-    private void dumpMon(Movement expenditure, Map<String, Map<String, Deal>> mapDeal) {
-        Map<String, Deal> dealList = mapDeal.computeIfAbsent(expenditure.getCategory(), k -> new LinkedHashMap<>());
-        Deal deal = dealList.computeIfAbsent(expenditure.getCompanyName(), k -> new Deal(expenditure.getCompanyName(), new LinkedList<>(), new LinkedList<>()));
-        ExpenditureModel expenditureModel = getExpenditureModel(expenditure);
-        deal.getExpenditureList().add(expenditureModel);
+    private void dumpMon(Movement movement, Map<String, Map<String, Deal>> mapDeal, OperationType operationType) {
+        Map<String, Deal> dealList = mapDeal.computeIfAbsent(movement.getCategory(), k -> new LinkedHashMap<>());
+        Deal deal = dealList.computeIfAbsent(movement.getCompanyName(), k -> new Deal(movement.getCompanyName(), new LinkedList<>(), new LinkedList<>()));
+        ExpenditureModel expenditureModel = getExpenditureModel(movement, operationType);
+        if (expenditureModel != null) {
+            deal.getExpenditureList().add(expenditureModel);
+        }
     }
 
-
-    private void dump(Workbook wb, Sheet sheet, Map<String, Map<String, Deal>> mapDeal) {
+    private void dump(Workbook wb, Sheet sheet, Map<String, Map<String, Deal>> mapDeal, String account) {
         AtomicInteger rowNum = new AtomicInteger(6);
         mapDeal.forEach((category, dealMap) -> {
             Row rowCat = sheet.createRow(rowNum.get());
             Cell cellComp = rowCat.createCell(0);
-            cellComp.setCellValue(category);
+            String categoryName = DealType.valueOf(category).getName().replace("#acct#", account);
+            cellComp.setCellValue(categoryName);
             cellComp.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.CATEGORY), IncomeService.getFont(wb, true, null), null, VerticalAlignment.CENTER, null));
             sheet.addMergedRegion(new CellRangeAddress(rowNum.get(), rowNum.get(), 0, 17));
 
             rowNum.set(rowNum.get() + 2);
             ResultRow resultRow = new ResultRow(rowNum.get());
             dump(wb, sheet, resultRow, dealMap.values().stream().toList());
-            createResult(wb, sheet, resultRow.getRow(), 0, "Доход по операциям с " + category, resultRow.getRevenueAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
-            createResult(wb, sheet, resultRow.getRow() + 1, 0, "Расход по операциям с " + category, resultRow.getExpenditureAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
-            createResult(wb, sheet, resultRow.getRow() + 2, 0, "Итого прибыль/убыток по операциям с " + category, resultRow.getRevenueAmount() - resultRow.getExpenditureAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
+            createResult(wb, sheet, resultRow.getRow(), 0, "Доход по операциям с " + categoryName, resultRow.getRevenueAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
+            createResult(wb, sheet, resultRow.getRow() + 1, 0, "Расход по операциям с " + categoryName, resultRow.getExpenditureAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
+            createResult(wb, sheet, resultRow.getRow() + 2, 0, "Итого прибыль/убыток по операциям с " + categoryName, resultRow.getRevenueAmount() - resultRow.getExpenditureAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
 
             rowNum.set(resultRow.getRow() + 4);
         });
     }
-    private ExpenditureModel getExpenditureModel(Movement revenueCommission) {
-        ExpenditureModel expenditureModel = new ExpenditureModel(revenueCommission.getTimestamp(), revenueCommission.getPrice(), revenueCommission.getQuantity(),  revenueCommission.getCurrencyCode(), "Основные 1530, 1535", "Комиссия за продажу",revenueCommission.getCommission());
-        valuteService.updateCurrObject(expenditureModel);
+
+    private ExpenditureModel getExpenditureModel(Movement movement, OperationType operationType) {
+        ExpenditureModel expenditureModel = null;
+        if (operationType.equals(OperationType.BUY)) {
+            expenditureModel = new ExpenditureModel(operationType, movement.getTimestamp(), movement.getPrice(), movement.getQuantity(), movement.getCurrencyCode(), Integer.toString(AssetType.valueOf(movement.getType()).getBuy()), operationType.getText(), null);
+        } else if (operationType.equals(OperationType.COMMISSION_SALE) && movement.getCommission() != null) {
+            expenditureModel = new ExpenditureModel(operationType, movement.getTimestamp(), null, movement.getQuantity(), movement.getCurrencyCode(), Integer.toString(AssetType.valueOf(movement.getType()).getCommissionSale()), operationType.getText(), movement.getCommission());
+        } else if (operationType.equals(OperationType.COMMISSION_BUY) && movement.getCommission() != null) {
+            expenditureModel = new ExpenditureModel(operationType, movement.getTimestamp(), null, movement.getQuantity(), movement.getCurrencyCode(), Integer.toString(AssetType.valueOf(movement.getType()).getCommissionBuy()), operationType.getText(), movement.getCommission());
+        }
+        if (expenditureModel != null) {
+            valuteService.updateCurrObject(expenditureModel);
+
+        }
         return expenditureModel;
     }
 
-    private RevenueModel getRevenueModel(Revenue revenue) {
-        RevenueModel revenueModel = new RevenueModel(revenue.getTimestamp(), revenue.getPrice(), revenue.getQuantity(), revenue.getCurrencyCode(), AssetType.Bonds.getType().toString(), "Продажа позиции");
+    private RevenueModel getRevenueModel(Revenue revenue, OperationType operationType) {
+        RevenueModel revenueModel = new RevenueModel(operationType, revenue.getTimestamp(), revenue.getPrice(), revenue.getQuantity(), revenue.getCurrencyCode(), Integer.toString(AssetType.valueOf(revenue.getType()).getRevenueCode()), operationType.getText());
         valuteService.updateCurrObject(revenueModel);
         return revenueModel;
     }
@@ -119,7 +139,7 @@ public class DumpDeal {
 
         row = sheet.createRow(rowNum);
         cell = row.createCell(0);
-        cell.setCellValue("Выручка");
+        cell.setCellValue("Доход");
         cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.REVENUE), IncomeService.getFont(wb, (short) 9)));
         sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, 8));
 
@@ -166,6 +186,7 @@ public class DumpDeal {
         }
         return colRow;
     }
+
     private static Double createRows(Workbook wb, Sheet sheet, Integer rowNum, int cellStart, List<? extends MovementModel> movementList) {
 
         double amountAll = 0f;
@@ -178,28 +199,28 @@ public class DumpDeal {
             IncomeService.addCell(wb, row, cellStartRow, movementModel.getTimestamp());
             cellStartRow++;
 
-            IncomeService.addCell(wb,row, cellStartRow, movementModel.getPrice(), IncomeService.getFontStyle(wb, (short) 9));
+            IncomeService.addCell(wb, row, cellStartRow, movementModel.getPrice(), IncomeService.getFontStyle(wb, (short) 9));
             cellStartRow++;
 
             IncomeService.addCell(row, cellStartRow, movementModel.getQuantity(), IncomeService.getFontStyle(wb, (short) 9));
             cellStartRow++;
 
-            IncomeService.addCell(wb,row, cellStartRow, movementModel.getAmountInCur(), IncomeService.getFontStyle(wb, (short) 9));
+            IncomeService.addCell(wb, row, cellStartRow, movementModel.getAmountInCur(), IncomeService.getFontStyle(wb, (short) 9));
             cellStartRow++;
 
             IncomeService.addCell(row, cellStartRow, movementModel.getCurrencyCode() + "/" + movementModel.getCurrencyName(), IncomeService.getFontStyle(wb, (short) 9));
             cellStartRow++;
 
-            IncomeService.addCell(wb,row, cellStartRow, movementModel.getCourse(), IncomeService.getFontStyle(wb, (short) 9));
+            IncomeService.addCell(wb, row, cellStartRow, movementModel.getCourse(), IncomeService.getFontStyle(wb, (short) 9));
             cellStartRow++;
 
-            IncomeService.addCell(wb,row, cellStartRow, movementModel.getAmount(), IncomeService.getFontStyle(wb, (short) 9));
+            IncomeService.addCell(wb, row, cellStartRow, movementModel.getAmount(), IncomeService.getFontStyle(wb, (short) 9));
             cellStartRow++;
 
             IncomeService.addCell(row, cellStartRow, movementModel.getCode(), IncomeService.getFontStyle(wb, (short) 9));
             cellStartRow++;
 
-            IncomeService.addCell(row, cellStartRow, movementModel.getTypeOf(), IncomeService.getCellStyleColor(wb,IncomeService.getFont(wb, (short) 9),true));
+            IncomeService.addCell(row, cellStartRow, movementModel.getTypeOf(), IncomeService.getCellStyleColor(wb, IncomeService.getFont(wb, (short) 9), true));
 
 
             amountAll = amountAll + movementModel.getAmount();

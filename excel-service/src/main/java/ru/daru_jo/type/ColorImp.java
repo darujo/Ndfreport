@@ -1,4 +1,4 @@
-package ru.daru_jo.service;
+package ru.daru_jo.type;
 
 import ru.daru_jo.helper.ColorInterface;
 

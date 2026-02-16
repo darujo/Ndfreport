@@ -35,7 +35,7 @@ public class IncomeService {
     @PostConstruct
     public void init() {
         Order order = service.readDataLineByLine("Daru", "c:\\11\\csv\\eng.csv");
-        dump("ss.xlsx", order);
+        dump("C:\\java\\NDFLBroker\\report\\ss" + order.getId() + ".xlsx", order);
     }
 
     public void dump(String fileName, Order order) {

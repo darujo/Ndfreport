@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 public interface Movement {
     String getCategory();
+    String getType();
     String getCompanyName();
 
     Timestamp getTimestamp();
