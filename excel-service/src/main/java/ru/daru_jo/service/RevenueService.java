@@ -27,7 +27,7 @@ public class RevenueService {
     public List<Revenue> findAll(Order order){
         Specification<Revenue> specification = Specification.unrestricted();
         specification = Specifications.eq(specification,"order", order);
-        return revenueRepository.findAll(specification, Sort.by("order").and(Sort.by("category").and(Sort.by("companyName"))));
+        return revenueRepository.findAll(specification, Sort.by("order").and(Sort.by("category").and(Sort.by("companyName").and(Sort.by("timestamp")))));
     }
 
 }

@@ -27,7 +27,7 @@ public class ExpenditureService {
     public List<Expenditure> findAll(Order order){
         Specification<Expenditure> specification = Specification.unrestricted();
         specification = Specifications.eq(specification,"order", order);
-        return expenditureRepository.findAll(specification, Sort.by("order").and(Sort.by("category").and(Sort.by("companyName"))));
+        return expenditureRepository.findAll(specification, Sort.by("order").and(Sort.by("category").and(Sort.by("companyName").and(Sort.by("timestamp")))));
     }
 
 }
