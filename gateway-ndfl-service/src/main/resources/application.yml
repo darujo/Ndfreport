@@ -1,0 +1,83 @@
+server:
+  port: 777
+  ssl:
+#    keytool -genkey -alias tomcat -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore keystore.p12  -validity 3650
+    key-store: classpath:keystore.p12
+    key-store-password: 53975397
+    keyStoreType: PKCS12
+    keyAlias: tomcat
+
+spring:
+  main:
+    banner-mode: console
+    web-application-type: reactive
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      server:
+        webflux:
+
+          enabled: true
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: "https://178.20.40.174:8285,https://localhost:8285"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - DELETE
+                allowedHeaders: "*"
+                allow-credentials: true
+          httpclient:
+            connect-timeout: 10000
+            response-timeout: 800s
+          routes:
+            - id: gate
+              uri: forward:///v1/system/shutdownContext
+              predicates:
+                - Path=/gate/shutdownContext
+              filters:
+                - JwtStopServiceFilter
+            - id: gate-test
+              uri: forward:///v1/system/test
+              predicates:
+                - Path=/gate/test
+            #              filters:
+            #                - JwtAdminFilter
+            #                - StripPrefix=1
+            #                            - PrefixPath=system/
+            - id: user-admin-service
+              uri: "http://localhost:8183"
+              predicates:
+                - Path=/admin/users/**,/admin/roles/**,/admin/projects/**
+              filters:
+                - StripPrefix=0
+                - PrefixPath=/app-auth/
+                - JwtAdminFilter
+            - id: front-service
+              uri: "http://localhost:8285"
+              predicates:
+                - Path=/app/**
+              filters:
+                - StripPrefix=1
+                - PrefixPath=/app-front/
+#            - JwtAuthFilter
+            - id: front-add
+              uri: "http://localhost:8285"
+              predicates:
+                - Path=/**
+              filters:
+                - StripPrefix=0
+                - PrefixPath=/app-front
+            #            - JwtAuthFilter
+
+
+#      default-filters:
+#        - DedupeResponseHeader = Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+#            - JwtAuthFilter
+
+jwt:
+  secretKey: fvgrtjbnjxcrqrrhudfoomyvdxfgrtrhyulmokfsezwatbkfvlkfdlhfcsacdvtbgfhyrgvwregtrhbs
+

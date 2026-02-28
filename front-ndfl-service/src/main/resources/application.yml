@@ -1,0 +1,6 @@
+server:
+  port: 8285
+  servlet:
+    context-path: /app-front
+
+ 

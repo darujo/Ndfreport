@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html ng-app="ndflService" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <script src="angular/jquery.min.js"></script>
+
+    <script src="angular/angular.min.js"></script>
+    <script src="angular/ngStorage.min.js"></script>
+    <script src="angular/angular-route.min.js"></script>
+    <script src="angular/ocLazyLoad.min.js"></script>
+    <script src="angular/angular-dnd.js"></script>
+    <script src="app_index/app.module.js?ver=3.1"></script>
+    <script src="app_index/app.config.js?ver=3.1"></script>
+    <script src="app_index/app.routes.js?ver=3.1"></script>
+
+    <script src="index.js?ver=2.0"></script>
+
+
+    <title>Рассчет брокера</title>
+    <link rel="stylesheet" href="style.css?ver=1.1">
+</head>
+<body>
+<div class="container horiz" ng-controller="indexController">
+    <nav>
+        <div class="" id="navbarNav">
+            <div>
+                <div class="horiz" ng-show="isUserLoggedInAndPasOk()">
+                    <details class="details_block_menu" open id="DetailPrim">
+                        <summary class="p-head">Меню</summary>
+                        <div class="nav-item">
+                            <a class="nav-link" href="#!/role">Setting</a>
+                        </div>
+                    </details>
+                    <details class="details_block_menu">
+                        <summary class="p-head">Настройки</summary>
+                        <div ng-if="!UserLogin.telegramAdd">
+                            <button ng-click="addTelegram()" id="ButtonTelegramAdd">
+                                {{CodeTelegram.ok ? "Запросить код повторно" : "Привязать telegram"}}
+                            </button>
+                            <br>
+                            <div ng-if="CodeTelegram.ok">
+                                <p>Для получения уведомлений перейдите <a href="http://{{CodeTelegram.link}}"
+                                                                          target="_blank">Бот</a>.
+                                    И отправьте команду /link. На запрос кода введите:<b>{{CodeTelegram.code}}</b>.
+                                    Внимание Код действует <b>{{CodeTelegram.time}}</b> минут. После авторизации в боте
+                                    нажмите кнопку: </p>
+                                <br>
+                                <button ng-click="getUser()" id="ButtonTelegramRef">Проверить</button>
+
+                            </div>
+                        </div>
+                        <div ng-if="UserLogin.telegramAdd">
+                            <button ng-click="deleteTelegram()" id="ButtonTelegramDel">Отвязать Telegram</button>
+                            <div><a class="nav-link" href="#!/user_info_type?userId={{UserLogin.id}}">Типы
+                                уведомлений</a></div>
+                        </div>
+
+                    </details>
+                </div>
+                <div class="nav-item" ng-show="!isUserLoggedIn()">
+                    <form class="" ng-submit="tryToAuth()">
+                        <div class="input-group input-group-sm" style="padding: 4px;">
+                            <label for="navLoginField">Логин:</label>
+                            <input id="navLoginField" class="vvod" ng-model="user.username" type="text"
+                                   aria-describedby="inputGroup-sizing-sm" style="margin-left: 10px;">
+
+                            <label for="navPasswordField">Пароль:</label>
+                            <input id="navPasswordField" class="vvod" ng-model="user.password"
+                                   type="password"
+                                   aria-describedby="inputGroup-sizing-sm" style="margin-left: 10px;">
+
+                            <button id="navLoginSubmit" class="head_button"
+                                    style="margin-left: 10px;" type="submit">Войти
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </nav>
+    <div class="nav-item" ng-show="isUserLoggedIn()" style="padding: 4px;">
+        <button class="head_button" ng-click="tryToLogout()">Выйти</button>
+    </div>
+    <div class="nav-item" ng-show="isUserLoggedIn()" style="padding: 4px;">
+        <div class="user_view">
+            <p class="p-form">
+                {{UserLogin.lastName}} {{UserLogin.firstName}} {{UserLogin.patronymic}}</p>
+        </div>
+
+        <!--    <input id="UserName" class="user_view""-->
+        <!--           type="readonly"-->
+        <!--    >-->
+    </div>
+    
+</div>
+<div>
+    <ng-view></ng-view>
+</div>
+<div><p><a class="nav-link" href="https://localhost:777/doc/oferta.docx" download target="_self">Пользовательское соглашени</a> Самозанятый Рубан Дмитрий Андреевич, ИНН 503468296823, +7(967)0843537 Copyright © 2025 www.ndflbroker.ru</p></div>
+</body>
+</html>
