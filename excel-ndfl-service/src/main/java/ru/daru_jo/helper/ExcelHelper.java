@@ -15,9 +15,7 @@ public class ExcelHelper {
     public static Workbook readWorkbook(String filename) {
         try {
             return new XSSFWorkbook(new File(filename));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidFormatException e) {
+        } catch (IOException | InvalidFormatException e) {
             throw new RuntimeException(e);
         }
 

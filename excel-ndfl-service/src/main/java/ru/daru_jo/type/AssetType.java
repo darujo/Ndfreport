@@ -1,5 +1,8 @@
 package ru.daru_jo.type;
 
+import lombok.Getter;
+
+@Getter
 public enum AssetType {
     //Фондовый рынок: ценные бумаги, обращающиеся на рынке
     Stocks(DealType.FOND,
@@ -81,35 +84,4 @@ public enum AssetType {
         this.generalExpenses = generalExpenses;
     }
 
-    public DealType getType() {
-        return type;
-    }
-
-    public String getAssetCategory() {
-        return assetCategory;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Integer getRevenueCode() {
-        return revenueCode;
-    }
-
-    public Integer getBuy() {
-        return buy;
-    }
-
-    public Integer getCommissionBuy() {
-        return commissionBuy;
-    }
-
-    public Integer getCommissionSale() {
-        return commissionSale;
-    }
-
-    public Integer getGeneralExpenses() {
-        return generalExpenses;
-    }
 }
