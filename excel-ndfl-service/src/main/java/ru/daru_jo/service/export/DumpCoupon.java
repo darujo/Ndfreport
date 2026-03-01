@@ -6,39 +6,32 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.daru_jo.entity.Coupon;
-import ru.daru_jo.entity.CouponNKD;
-import ru.daru_jo.entity.CouponNKDMinus;
-import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.*;
 import ru.daru_jo.helper.ExcelHelper;
 import ru.daru_jo.model.Deal;
 import ru.daru_jo.model.ExpenditureModel;
 import ru.daru_jo.model.RevenueModel;
 import ru.daru_jo.service.IncomeService;
-import ru.daru_jo.service.db.CouponNKDMinusService;
-import ru.daru_jo.service.db.CouponNKDService;
+import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.ValuteService;
-import ru.daru_jo.service.db.CouponService;
+import ru.daru_jo.service.db.BondService;
 import ru.daru_jo.type.AssetType;
 import ru.daru_jo.model.CouponModel;
 import ru.daru_jo.type.ColorImp;
 import ru.daru_jo.type.OperationType;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class DumpCoupon {
-    private CouponService couponService;
-    private CouponNKDService couponNKDService;
-    private CouponNKDMinusService couponNKDMinusService;
+    private BondService bondService;
     private ValuteService valuteService;
+    private OrderAccountService orderAccountService;
 
     @Autowired
-    public void setCouponService(CouponService couponService) {
-        this.couponService = couponService;
+    public void setBondService(BondService bondService) {
+        this.bondService = bondService;
     }
 
     @Autowired
@@ -47,50 +40,51 @@ public class DumpCoupon {
     }
 
     @Autowired
-    public void setCouponNKDService(CouponNKDService couponNKDService) {
-        this.couponNKDService = couponNKDService;
+    public void setOrderAccountService(OrderAccountService orderAccountService) {
+        this.orderAccountService = orderAccountService;
     }
 
-    @Autowired
-    public void setCouponNKDMinusService(CouponNKDMinusService couponNKDMinusService) {
-        this.couponNKDMinusService = couponNKDMinusService;
-    }
+    private final Sort sort = Sort.by("orderAccount", "type", "date", "code");
 
-    public void dump(Workbook wb, Sheet sheet, Order order) {
+    public void dump(Workbook wb, Sheet sheet, Order order, String year) {
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
-        cell.setCellValue(String.format("Раздел 1.2. Доходы по купонам за период 01/01/%s - 31/12/%s", order.getYear(), order.getYear()));
+        cell.setCellValue(String.format("Раздел 1.2. Доходы по купонам за период 01/01/%s - 31/12/%s", year, year));
         cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.HEAD), IncomeService.getFont(wb, IndexedColors.WHITE, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
         sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 12));
-        row = sheet.createRow(3);
-        cell = row.createCell(0);
-        cell.setCellValue(String.format("Купоны, полученные в Interactive Brokers %s", order.getAccount()));
-        cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.CATEGORY), IncomeService.getFont(wb, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
-        sheet.addMergedRegion(new CellRangeAddress(3, 3, 0, 12));
 
-        dump(wb, sheet, couponService.findAll(order, Sort.by("order", "date", "code")).stream().map(coupon -> {
-            CouponModel couponModel = new CouponModel(coupon);
-            valuteService.updateCurrObject(couponModel);
-            return couponModel;
-        }).toList());
+        AtomicInteger rowNum = new AtomicInteger(3);
+        orderAccountService.findAll(order, year).forEach(orderAccount -> {
+            Row rowAccount = sheet.createRow(rowNum.getAndIncrement());
+            Cell cellAccount = rowAccount.createCell(0);
+            cellAccount.setCellValue(String.format("Купоны, полученные в Interactive Brokers %s", orderAccount.getAccount()));
+            cellAccount.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.CATEGORY), IncomeService.getFont(wb, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
+            sheet.addMergedRegion(new CellRangeAddress(3, 3, 0, 12));
+
+            dump(wb, sheet,rowNum, bondService.findAll(orderAccount, OperationType.COUPON_PAYMENT.toString(), sort).stream().map(coupon -> {
+                CouponModel couponModel = new CouponModel(coupon);
+                valuteService.updateCurrObject(couponModel);
+                return couponModel;
+            }).toList());
+        });
     }
 
-    public void dump(Workbook wb, Sheet sheet, List<CouponModel> couponList) {
+    public void dump(Workbook wb, Sheet sheet,AtomicInteger rowNum, List<CouponModel> couponList) {
         String code = null;
-        Integer rowNum = 5;
+
 
         for (CouponModel coupon : couponList) {
             if (code == null) {
-                rowNum = createTableHead(wb, sheet, rowNum, coupon.getCode(), coupon.getCurrencyName());
+                rowNum.set( createTableHead(wb, sheet, rowNum.get(), coupon.getCode(), coupon.getCurrencyName()));
 
 
             } else if (!code.equals(coupon.getCode())) {
-                rowNum++;
-                rowNum = createTableHead(wb, sheet, rowNum, coupon.getCode(), coupon.getCurrencyName());
+
+                rowNum.set( createTableHead(wb, sheet, rowNum.incrementAndGet(), coupon.getCode(), coupon.getCurrencyName()));
             }
             code = coupon.getCode();
             int cellStartRow = 0;
-            Row row = sheet.createRow(rowNum++);
+            Row row = sheet.createRow(rowNum.getAndIncrement());
             IncomeService.addCell(wb, row, cellStartRow, coupon.getTimestamp());
             cellStartRow++;
 
@@ -141,53 +135,50 @@ public class DumpCoupon {
         return rowNum;
     }
 
-    public void addCoupon(Order order, Map<String, Map<String, Deal>> mapDeal) {
-        Map<String, Deal> dealList = mapDeal.computeIfAbsent(AssetType.Bonds.getType().toString(), s -> new LinkedHashMap<>());
-        couponService
-                .findAll(order, Sort.by("order", "date", "code"))
-                .forEach(coupon -> {
-                    Deal deal = dealList.computeIfAbsent(coupon.getCode(), s -> new Deal(coupon.getCode(), new LinkedList<>()));
-                    RevenueModel revenueModel = getRevenueModel(coupon);
-                    deal.getRevenueList().add(revenueModel);
+    public void addCoupon(Order order, String year, Map<String, Map<String, Map<String, Deal>>> mapDeal) {
+        orderAccountService.findAll(order, year).forEach(orderAccount -> {
+            Map<String, Deal> dealList = mapDeal
+                    .computeIfAbsent(orderAccount.getAccount(), s -> new LinkedHashMap<>())
+                    .computeIfAbsent(AssetType.Bonds.getType().toString(), s -> new LinkedHashMap<>());
+            List<String> revenueTypes = new ArrayList<>();
+            revenueTypes.add(OperationType.COUPON_PAYMENT.toString());
+            revenueTypes.add(OperationType.COUPON_NKD.toString());
+            revenueTypes.add(OperationType.BOND_FULL_CALL.toString());
+            bondService
+                    .findAll(orderAccount, revenueTypes, sort)
+                    .forEach(coupon -> {
+                        Deal deal = dealList.computeIfAbsent(coupon.getCode(), s -> new Deal(coupon.getCode(), new LinkedList<>()));
+                        RevenueModel revenueModel = getRevenueModel(coupon);
+                        deal.getRevenueList().add(revenueModel);
 
-                });
-        couponNKDMinusService
-                .findAll(order, Sort.by("order", "code", "date"))
-                .forEach(couponNKDMinus -> {
-                    Deal deal = dealList.computeIfAbsent(couponNKDMinus.getCode(), s -> new Deal(couponNKDMinus.getCode(), new LinkedList<>()));
-                    ExpenditureModel expenditureModel = getExpenditureModel(couponNKDMinus);
-                    if (deal.getRevenueList().isEmpty()) {
-                        deal.addExpenditureModelNotRevenue(expenditureModel);
-                    } else {
-                        deal.getRevenueList().get(0).getExpenditureModelList().add(expenditureModel);
-                    }
-                });
-        couponNKDService
-                .findAll(order, Sort.by("order", "code", "date"))
-                .forEach(couponNKD -> {
-                    Deal deal = dealList.computeIfAbsent(couponNKD.getCode(), s -> new Deal(couponNKD.getCode(), new LinkedList<>()));
-                    RevenueModel revenueModel = getRevenueModel(couponNKD);
-                    deal.getRevenueList().add(revenueModel);
+                    });
+            List<String> expenditureTypes = new ArrayList<>();
+            expenditureTypes.add(OperationType.COUPON_NKD_MINUS.toString());
+            expenditureTypes.add(OperationType.BOND_CLOSED_LOT.toString());
 
-                });
+            bondService
+                    .findAll(orderAccount, expenditureTypes, sort)
+                    .forEach(couponNKDMinus -> {
+                        Deal deal = dealList.computeIfAbsent(couponNKDMinus.getCode(), s -> new Deal(couponNKDMinus.getCode(), new LinkedList<>()));
+                        ExpenditureModel expenditureModel = getExpenditureModel(couponNKDMinus);
+                        if (deal.getRevenueList().isEmpty()) {
+                            deal.addExpenditureModelNotRevenue(expenditureModel);
+                        } else {
+                            deal.getRevenueList().get(0).getExpenditureModelList().add(expenditureModel);
+                        }
+                    });
+        });
     }
 
-    private RevenueModel getRevenueModel(CouponNKD couponNKD) {
+    private ExpenditureModel getExpenditureModel(Bond bond) {
         AssetType assetType = AssetType.Bonds;
-        OperationType operation = OperationType.COUPON_PAYMENT;
-        return new RevenueModel(operation, couponNKD.getDate(), null, null, couponNKD.getCurrency(), Integer.toString(assetType.getRevenueCode()), operation.getText(), couponNKD.getAmount());
-
+        OperationType operation = OperationType.valueOf(bond.getType());
+        return new ExpenditureModel(operation, bond.getDate(), null, null, bond.getCurrency(), Integer.toString(assetType.getGeneralExpenses()), operation.getText(), bond.getAmount());
     }
 
-    private ExpenditureModel getExpenditureModel(CouponNKDMinus couponNKDMinus) {
+    public RevenueModel getRevenueModel(Bond bond) {
         AssetType assetType = AssetType.Bonds;
-        OperationType operation = OperationType.COUPON_NKD_MINUS;
-        return new ExpenditureModel(operation, couponNKDMinus.getDate(), null, null, couponNKDMinus.getCurrency(),  Integer.toString(assetType.getGeneralExpenses()), operation.getText(),couponNKDMinus.getAmount());
-    }
-
-    public RevenueModel getRevenueModel(Coupon coupon) {
-        AssetType assetType = AssetType.Bonds;
-        OperationType operation = OperationType.COUPON_PAYMENT;
-        return new RevenueModel(operation, coupon.getDate(), null, null, coupon.getCurrency(), Integer.toString(assetType.getRevenueCode()), operation.getText(),coupon.getAmount());
+        OperationType operation = OperationType.valueOf(bond.getType());
+        return new RevenueModel(operation, bond.getDate(), null, null, bond.getCurrency(), Integer.toString(assetType.getRevenueCode()), operation.getText(), bond.getAmount());
     }
 }

@@ -5,7 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.daru_jo.entity.DividendTax;
-import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.repository.DividendTaxRepository;
 import ru.daru_jo.specifications.Specifications;
 
@@ -21,9 +21,9 @@ public class DividendTaxService {
         this.dividendTaxRepository = dividendTaxRepository;
     }
 
-    public List<DividendTax> findAll(Order order, String code, Timestamp date, Sort sort) {
+    public List<DividendTax> findAll(OrderAccount orderAccount, String code, Timestamp date, Sort sort) {
         Specification<DividendTax> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order",order);
+        specification = Specifications.eq(specification,"order", orderAccount);
         specification = Specifications.eq(specification,"code",code);
         specification = Specifications.eq(specification,"date",date);
         return dividendTaxRepository.findAll(specification,sort);

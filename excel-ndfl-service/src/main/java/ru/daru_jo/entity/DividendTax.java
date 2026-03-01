@@ -26,6 +26,6 @@ public class DividendTax {
     @Column(name = "currency")
     private String currency;
     @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
+    @JoinColumn(name = "order_account_id")
+    private OrderAccount orderAccount;
 }

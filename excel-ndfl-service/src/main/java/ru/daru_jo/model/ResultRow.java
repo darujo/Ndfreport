@@ -13,4 +13,7 @@ public class ResultRow {
     public ResultRow(Integer row) {
         this.row = row;
     }
+
+    public ResultRow() {
+    }
 }

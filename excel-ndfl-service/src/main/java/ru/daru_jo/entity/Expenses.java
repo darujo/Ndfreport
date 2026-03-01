@@ -1,18 +1,16 @@
 package ru.daru_jo.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Data
 @Entity
-@Table(name = "dividend")
-public class Dividend {
+@Table(name = "expenses")
+public class Expenses {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,9 +23,18 @@ public class Dividend {
     private Double amount;
     @Column(name = "currency")
     private String currency;
-    @Column(name = "country")
-    private String country;
     @ManyToOne
     @JoinColumn(name = "order_account_id")
     private OrderAccount orderAccount;
+    @Column(name = "type")
+    private String type;
+
+    public Expenses(String code, Timestamp date, Double amount, String currency, OrderAccount orderAccount, String type) {
+        this.code = code;
+        this.date = date;
+        this.amount = amount;
+        this.currency = currency;
+        this.orderAccount = orderAccount;
+        this.type = type;
+    }
 }

@@ -34,6 +34,6 @@ public class Expenditure implements Movement {
     @Column(name = "commission")
     private Double commission; // Comm/Fee (Комиссия/плата)
     @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
+    @JoinColumn(name = "order_account_id")
+    private OrderAccount orderAccount;
 }

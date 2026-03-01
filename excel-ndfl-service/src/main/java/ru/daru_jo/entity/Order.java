@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Data
@@ -22,17 +24,17 @@ public class Order {
     @Column(name = "timestamp")
     private Timestamp timestamp;
 
-    @Column(name = "account")
-    private String account;
+    @Column(name = "years")
+    private List<String> yearList;
 
-    @Column(name = "year")
-    private String year;
-    @Column(name = "error")
-    private String error;
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    private List<OrderAccount> orderAccountList;
+
 
     public Order(String userNik) {
         this.userNik = userNik;
         this.timestamp = new Timestamp(System.currentTimeMillis());
+        this.orderAccountList = new ArrayList<>();
     }
 
 }

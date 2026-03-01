@@ -15,11 +15,11 @@ public class OrderService {
     private OrderRepository orderRepository;
 
     @Autowired
-    public void setOrderRepository(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
+    public void setOrderRepository(OrderRepository orderAccountRepository) {
+        this.orderRepository = orderAccountRepository;
     }
 
-    public Order saveOrder (Order order){
+    public Order save(Order order){
         return orderRepository.save(order);
     }
 

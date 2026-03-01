@@ -30,7 +30,7 @@ public class fileController {
     @GetMapping("")
     public Order saveFile(@RequestParam("file") List<MultipartFile> files,
                           @RequestHeader(required = false) String username){
-        Order order = orderService.saveOrder(new Order(username));
+        Order order = orderService.save(new Order(username));
         fileService.saveFiles(order, files);
         return order;
     }

@@ -5,7 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.daru_jo.entity.Expenditure;
-import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.repository.ExpenditureRepository;
 import ru.daru_jo.specifications.Specifications;
 
@@ -24,9 +24,9 @@ public class ExpenditureService {
         expenditureRepository.save(expenditure);
     }
 
-    public List<Expenditure> findAll(Order order){
+    public List<Expenditure> findAll(OrderAccount orderAccount){
         Specification<Expenditure> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", order);
+        specification = Specifications.eq(specification,"order", orderAccount);
         return expenditureRepository.findAll(specification, Sort.by("order").and(Sort.by("category").and(Sort.by("companyName").and(Sort.by("timestamp")))));
     }
 

@@ -3,8 +3,8 @@ package ru.daru_jo.repository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
-import ru.daru_jo.entity.CouponNKDMinus;
+import ru.daru_jo.entity.Expenses;
 
 
-public interface CouponNKDMinusRepository extends CrudRepository<@NonNull CouponNKDMinus, @NonNull Long>, JpaSpecificationExecutor<@NonNull CouponNKDMinus> {
+public interface ExpensesRepository extends CrudRepository<@NonNull Expenses, @NonNull Long>, JpaSpecificationExecutor<@NonNull Expenses> {
 }

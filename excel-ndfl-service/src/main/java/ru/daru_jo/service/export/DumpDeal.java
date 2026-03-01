@@ -9,6 +9,7 @@ import ru.daru_jo.entity.*;
 import ru.daru_jo.helper.ExcelHelper;
 import ru.daru_jo.model.*;
 import ru.daru_jo.service.IncomeService;
+import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.ValuteService;
 import ru.daru_jo.service.db.ExpenditureService;
 import ru.daru_jo.service.db.RevenueService;
@@ -22,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @Slf4j
@@ -30,6 +32,7 @@ public class DumpDeal {
     private ExpenditureService expenditureService;
     private ValuteService valuteService;
     private DumpCoupon dumpCoupon;
+    private OrderAccountService orderAccountService;
 
     @Autowired
     public void setRevenueService(RevenueService revenueService) {
@@ -51,12 +54,17 @@ public class DumpDeal {
         this.dumpCoupon = dumpCoupon;
     }
 
-    public void dump(Workbook wb, Sheet sheet, Order order) {
-        Map<String, Map<String, Deal>> mapDeal = addMove(order);
-        dumpCoupon.addCoupon(order,mapDeal);
+    @Autowired
+    public void setOrderAccountService(OrderAccountService orderAccountService) {
+        this.orderAccountService = orderAccountService;
+    }
+
+    public void dump(Workbook wb, Sheet sheet, Order order, String year) {
+        Map<String,Map<String, Map<String, Deal>>> mapDeal = addMove(order,year);
+        dumpCoupon.addCoupon(order,year, mapDeal);
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
-        cell.setCellValue(String.format("Раздел 1. Доходы от операций с ценными бумагами и иными финансовыми инструментами за период 01/01/%s - 31/12/%s ", order.getYear(), order.getYear()));
+        cell.setCellValue(String.format("Раздел 1. Доходы от операций с ценными бумагами и иными финансовыми инструментами за период 01/01/%s - 31/12/%s ", year, year));
         cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.HEAD), IncomeService.getFont(wb, IndexedColors.WHITE, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
         sheet.addMergedRegion(new CellRangeAddress(0, 2, 0, 17));
         row = sheet.createRow(3);
@@ -65,26 +73,33 @@ public class DumpDeal {
         cell.setCellStyle(IncomeService.getCellStyleColor(wb, null, IncomeService.getFont(wb, (short) 9), HorizontalAlignment.LEFT, VerticalAlignment.CENTER, true));
         sheet.addMergedRegion(new CellRangeAddress(3, 5, 0, 17));
 
-        dump(wb, sheet, mapDeal, order.getAccount());
+        dump(wb, sheet, mapDeal);
     }
-    private Map<String, Map<String, Deal>> addMove(Order order){
-        List<Revenue> revenueList = revenueService.findAll(order);
-        Map<String, Map<String, Deal>> mapDeal = new LinkedHashMap<>();
+    private Map<String, Map<String, Map<String, Deal>>> addMove(Order order, String year){
+        Map<String,Map<String, Map<String, Deal>>> mapDeal = new LinkedHashMap<>();
+        orderAccountService.findAll(order,year).forEach(orderAccount -> {
+        List<Revenue> revenueList = revenueService.findAll(orderAccount);
+
         revenueList.forEach(revenue -> {
-            Map<String, Deal> dealList = mapDeal.computeIfAbsent(revenue.getCategory(), k -> new LinkedHashMap<>());
+            Map<String, Deal> dealList = mapDeal
+                    .computeIfAbsent(orderAccount.getAccount(),s -> new LinkedHashMap<>())
+                    .computeIfAbsent(revenue.getCategory(), k -> new LinkedHashMap<>());
             Deal deal = dealList.computeIfAbsent(revenue.getCompanyName(), k -> new Deal(revenue.getCompanyName(), new LinkedList<>()));
             RevenueModel revenueModel = getRevenueModel(revenue, OperationType.SALE);
             deal.getRevenueList().add(revenueModel);
             addMove(revenue, revenueModel, OperationType.COMMISSION_SALE);
 
         });
-        expenditureService.findAll(order).forEach(expenditure -> addMoveAndMinus(expenditure, mapDeal));
+        expenditureService.findAll(orderAccount).forEach(expenditure -> addMoveAndMinus(expenditure,orderAccount.getAccount(), mapDeal));
+        });
         return mapDeal;
     }
-    private void addMoveAndMinus(Movement movement, Map<String, Map<String, Deal>> mapDeal) {
+    private void addMoveAndMinus(Movement movement, String account, Map<String,Map<String, Map<String, Deal>>> mapDeal) {
         ExpenditureModel expenditureModel = getExpenditureModel(movement, OperationType.BUY);
         if (expenditureModel != null) {
-            Map<String, Deal> dealList = mapDeal.computeIfAbsent(movement.getCategory(), k -> new LinkedHashMap<>());
+            Map<String, Deal> dealList = mapDeal
+                    .computeIfAbsent(account,s -> new LinkedHashMap<>())
+                    .computeIfAbsent(movement.getCategory(), k -> new LinkedHashMap<>());
             Deal deal = dealList.computeIfAbsent(movement.getCompanyName(), k -> new Deal(movement.getCompanyName(), new LinkedList<>()));
             for (RevenueModel revenueModel : deal.getRevenueList()) {
                 if (revenueModel.getQuantityDistributed() != null && revenueModel.getQuantityDistributed() > 0 && revenueModel.getTimestamp().before(expenditureModel.getTimestamp())) {
@@ -115,8 +130,26 @@ public class DumpDeal {
         }
     }
 
-    private void dump(Workbook wb, Sheet sheet, Map<String, Map<String, Deal>> mapDeal, String account) {
+    private void dump(Workbook wb, Sheet sheet, Map<String,Map<String, Map<String, Deal>>> mapDeal) {
         AtomicInteger rowNum = new AtomicInteger(6);
+        AtomicReference<Double> revenueAmount = new AtomicReference<>(0d);
+        AtomicReference<Double> expenditureAmount = new AtomicReference<>(0d);
+        mapDeal.forEach((account, stringMapMap) -> {
+            ResultRow resultRow = dump(wb,sheet,rowNum,stringMapMap, account);
+            revenueAmount.set(revenueAmount.get() + resultRow.getRevenueAmount());
+            expenditureAmount.set(expenditureAmount.get() + resultRow.getExpenditureAmount());
+
+        });
+
+
+        createResult(wb, sheet, rowNum.incrementAndGet(), 0, "Доход по операциям", revenueAmount.get(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
+        createResult(wb, sheet, rowNum.incrementAndGet(), 0, "Расход по операциям ", expenditureAmount.get(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
+        createResult(wb, sheet, rowNum.incrementAndGet(), 0, "Итого прибыль/убыток по операциям", revenueAmount.get() - expenditureAmount.get(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
+
+
+    }
+    private ResultRow dump(Workbook wb, Sheet sheet, AtomicInteger rowNum, Map<String, Map<String, Deal>> mapDeal,String account){
+        ResultRow resultRowTotal =new ResultRow();
         mapDeal.forEach((category, dealMap) -> {
             Row rowCat = sheet.createRow(rowNum.get());
             Cell cellComp = rowCat.createCell(0);
@@ -142,10 +175,14 @@ public class DumpDeal {
             createResult(wb, sheet, resultRow.getRow(), 0, "Доход по операциям с " + categoryName, resultRow.getRevenueAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
             createResult(wb, sheet, resultRow.getRow() + 1, 0, "Расход по операциям с " + categoryName, resultRow.getExpenditureAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
             createResult(wb, sheet, resultRow.getRow() + 2, 0, "Итого прибыль/убыток по операциям с " + categoryName, resultRow.getRevenueAmount() - resultRow.getExpenditureAmount(), IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.RESULT), IncomeService.getFont(wb, true, (short) 9)));
-
+            resultRowTotal.setRevenueAmount( resultRowTotal.getRevenueAmount() + resultRow.getRevenueAmount());
+            resultRowTotal.setExpenditureAmount( resultRowTotal.getExpenditureAmount() + resultRow.getExpenditureAmount());
             rowNum.set(resultRow.getRow() + 4);
         });
+        resultRowTotal.setRow(rowNum.get());
+        return resultRowTotal;
     }
+
 
     private ExpenditureModel getExpenditureModel(Movement movement, OperationType operationType) {
         return getExpenditureModel(movement, operationType, 1d);

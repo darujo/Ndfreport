@@ -1,34 +1,12 @@
 package ru.daru_jo.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import ru.daru_jo.type.OperationType;
 
 import java.sql.Timestamp;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Data
-@Entity
-@Table(name = "coupon_nkd")
-public class CouponNKD {
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(name = "code")
-    private String code;
-    @Column(name = "date")
-    private Timestamp date;
-    @Column(name = "amount")
-    private Double amount;
-    @Column(name = "currency")
-    private String currency;
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order; // Comm/Fee (Комиссия/плата)
 
-
-
+public class CouponNKD extends Bond{
+    public CouponNKD(Long id, String code, Timestamp date, Double amount, String currency, OrderAccount orderAccount) {
+        super(id, code, date, amount, currency, orderAccount, OperationType.COUPON_NKD.toString());
+    }
 }

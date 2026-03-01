@@ -5,7 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.daru_jo.entity.Dividend;
-import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.repository.DividendRepository;
 import ru.daru_jo.specifications.Specifications;
 
@@ -20,9 +20,9 @@ public class DividendService {
         this.dividendRepository = dividendRepository;
     }
 
-    public List<Dividend> findAll(Order order, Sort sort) {
+    public List<Dividend> findAll(OrderAccount orderAccount, Sort sort) {
         Specification<Dividend> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order",order);
+        specification = Specifications.eq(specification,"order", orderAccount);
         return dividendRepository.findAll(specification,sort);
     }
 

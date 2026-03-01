@@ -26,7 +26,7 @@ public class FileService {
         this.scheduleService = scheduleService;
     }
 
-    public List<File> saveFiles(Order order , List<MultipartFile> multipartFiles) {
+    public List<File> saveFiles(Order order, List<MultipartFile> multipartFiles) {
         List<File> files = new ArrayList<>();
 
         AtomicInteger num = new AtomicInteger();

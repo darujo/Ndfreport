@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.model.RunnableNotException;
+import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.OrderService;
 
 import java.io.IOException;
@@ -19,11 +21,22 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ScheduleService implements AutoCloseable {
     private ParserCSVService parserCSVService;
+    private OrderAccountService orderAccountService;
     private OrderService orderService;
 
     @Autowired
     public void setParserCSVService(ParserCSVService parserCSVService) {
         this.parserCSVService = parserCSVService;
+    }
+
+    @Autowired
+    public void setOrderAccountService(OrderAccountService orderAccountService) {
+        this.orderAccountService = orderAccountService;
+    }
+
+    @Autowired
+    public void setOrderService(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(3);
@@ -47,23 +60,28 @@ public class ScheduleService implements AutoCloseable {
 
     }
 
+
     public RunnableNotException getTaskParsFiles(Order order, List<MultipartFile> files) {
         Runnable runnable = () ->
                 files.forEach(multipartFile ->
                 {
+                    OrderAccount orderAccount = new OrderAccount();
+                    orderAccountService.save(orderAccount);
+                    order.getOrderAccountList().add(orderAccount);
+                    orderService.save(order);
                     try {
-                        parserCSVService.readDataLineByLine(order, new InputStreamReader(multipartFile.getInputStream()));
+                        parserCSVService.readDataLineByLine(orderAccount, new InputStreamReader(multipartFile.getInputStream()));
+                        if (order.getYearList().contains(orderAccount.getYear())) {
+                            order.getYearList().add(orderAccount.getYear());
+                        }
+
+                        orderService.save(order);
                     } catch (IOException e) {
-                        order.setError(e.getMessage());
-                        orderService.saveOrder(order);
+                        orderAccount.setError(e.getMessage());
+                        orderAccountService.save(orderAccount);
                         throw new RuntimeException(e);
                     }
                 });
         return new RunnableNotException(runnable);
-    }
-
-    @Autowired
-    public void setOrderService(OrderService orderService) {
-        this.orderService = orderService;
     }
 }

@@ -2,7 +2,7 @@ package ru.daru_jo.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import ru.daru_jo.entity.Coupon;
+import ru.daru_jo.entity.Bond;
 
 import java.sql.Timestamp;
 @Getter
@@ -18,7 +18,7 @@ public class CouponModel implements CurrencyModel{
     @Setter
     private Double amount;
 
-    public CouponModel(Coupon coupon){
+    public CouponModel(Bond coupon){
         this(coupon.getCode(),coupon.getDate(),coupon.getAmount(),coupon.getCurrency());
     }
 

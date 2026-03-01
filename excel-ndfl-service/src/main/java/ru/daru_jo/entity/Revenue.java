@@ -34,6 +34,6 @@ public class Revenue implements Movement {
     @Column(name = "commission")
     private Double commission; // Comm/Fee (Комиссия/плата)
     @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order; // Comm/Fee (Комиссия/плата)
+    @JoinColumn(name = "order_account_id")
+    private OrderAccount orderAccount; // Comm/Fee (Комиссия/плата)
 }

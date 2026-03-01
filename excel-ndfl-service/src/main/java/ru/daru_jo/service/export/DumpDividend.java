@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.daru_jo.entity.Dividend;
 import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.helper.ExcelHelper;
 import ru.daru_jo.model.DividendModel;
 import ru.daru_jo.model.DividendRevenueModel;
@@ -16,6 +17,7 @@ import ru.daru_jo.model.ResultRow;
 import ru.daru_jo.service.IncomeService;
 import ru.daru_jo.service.db.DividendService;
 import ru.daru_jo.service.db.DividendTaxService;
+import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.ValuteService;
 import ru.daru_jo.type.ColorImp;
 
@@ -31,6 +33,7 @@ public class DumpDividend {
     private DividendService dividendService;
     private DividendTaxService dividendTaxService;
     private ValuteService valuteService;
+    private OrderAccountService orderAccountService;
 
     @Autowired
     public void setDividendService(DividendService dividendService) {
@@ -47,22 +50,32 @@ public class DumpDividend {
         this.valuteService = valuteService;
     }
 
-    public void dump(Workbook wb, Sheet sheet, Order order) {
-        Row row = sheet.createRow(0);
-        Cell cell = row.createCell(0);
-        cell.setCellValue(String.format("Раздел 2. Доходы по дивидендам за период 01/01/%s - 31/12/%s", order.getYear(), order.getYear()));
-        cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.HEAD), IncomeService.getFont(wb, IndexedColors.WHITE, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
-        sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 11));
-        Map<String, Map<Timestamp, Map<String, DividendModel>>> currencyDateCodeDividendMap = addDividend(order);
-        AtomicInteger rowNum = new AtomicInteger(1);
-        currencyDateCodeDividendMap.keySet().forEach(currency -> dumpCurrency(wb, sheet, rowNum, order, currency, currencyDateCodeDividendMap.get(currency)));
+    @Autowired
+    public void setOrderAccountService(OrderAccountService orderAccountService) {
+        this.orderAccountService = orderAccountService;
     }
 
-    private void dumpCurrency(Workbook wb, Sheet sheet, AtomicInteger rowNum, Order order, String currency, Map<Timestamp, Map<String, DividendModel>> dateCodeDividendModelMap) {
+    public void dump(Workbook wb, Sheet sheet, Order order, String year) {
+        Row row = sheet.createRow(0);
+        Cell cell = row.createCell(0);
+        cell.setCellValue(String.format("Раздел 2. Доходы по дивидендам за период 01/01/%s - 31/12/%s", year, year));
+        cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.HEAD), IncomeService.getFont(wb, IndexedColors.WHITE, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
+        sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 11));
+        Map<String, Map<String, Map<Timestamp, Map<String, DividendModel>>>> accountCurrencyDateCodeDividendMap = addDividend(order, year);
+        AtomicInteger rowNum = new AtomicInteger(1);
+        accountCurrencyDateCodeDividendMap.keySet().forEach(account -> dumpAccount(wb, sheet, rowNum, account, accountCurrencyDateCodeDividendMap.get(account)));
+    }
+
+    private void dumpAccount(Workbook wb, Sheet sheet, AtomicInteger rowNum, String account, Map<String, Map<Timestamp, Map<String, DividendModel>>> currencyDateCodeDividendMap) {
+        currencyDateCodeDividendMap.forEach((currency, dateCodeDividendModelMap) ->
+                dumpCurrency(wb,sheet,rowNum,account,currency,currencyDateCodeDividendMap.get(currency)));
+    }
+
+    private void dumpCurrency(Workbook wb, Sheet sheet, AtomicInteger rowNum, String account, String currency, Map<Timestamp, Map<String, DividendModel>> dateCodeDividendModelMap) {
         rowNum.incrementAndGet();
         Row row = sheet.createRow(rowNum.incrementAndGet());
         Cell cell = row.createCell(0);
-        cell.setCellValue(String.format("Дивиденды, полученные в Interactive Brokers %s в валюте %s", order.getAccount(), currency));
+        cell.setCellValue(String.format("Дивиденды, полученные в Interactive Brokers %s в валюте %s", account, currency));
         cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.CATEGORY), IncomeService.getFont(wb, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
         sheet.addMergedRegion(new CellRangeAddress(rowNum.get(), rowNum.get(), 0, 13));
         AtomicReference<Double> amount = new AtomicReference<>(0d);
@@ -161,7 +174,7 @@ public class DumpDividend {
         if (row == null) {
             row = sheet.createRow(rowNum);
         }
-        IncomeService.addCellPercent(wb, row, cellStartRow, dividendModel.getDividendTaxModel().getAmount() / dividendModel.getDividendRevenueModel().getAmount()  , IncomeService.getFontStyle(wb, (short) 9));
+        IncomeService.addCellPercent(wb, row, cellStartRow, dividendModel.getDividendTaxModel().getAmount() / dividendModel.getDividendRevenueModel().getAmount(), IncomeService.getFontStyle(wb, (short) 9));
         cellStartRow++;
 
         IncomeService.addCell(wb, row, cellStartRow, dividendModel.getDividendTaxModel().getAmountInCur(), IncomeService.getFontStyle(wb, (short) 9));
@@ -191,30 +204,32 @@ public class DumpDividend {
         return taxPay;
     }
 
-    private Map<String, Map<Timestamp, Map<String, DividendModel>>> addDividend(Order order) {
-        Map<String, Map<Timestamp, Map<String, DividendModel>>> currencyCodeDividendMap = new LinkedHashMap<>();
-        dividendService.findAll(order, Sort.by("order", "date", "code")).forEach(dividend -> {
-            Map<String, DividendModel> codeDividendMap = currencyCodeDividendMap
-                    .computeIfAbsent(dividend.getCurrency(), s -> new LinkedHashMap<>())
-                    .computeIfAbsent(dividend.getDate(), timestamp -> new LinkedHashMap<>());
-            DividendModel div = codeDividendMap.get(dividend.getCode());
-            if (div == null) {
-                codeDividendMap.put(dividend.getCode(),
-                        new DividendModel(
-                                dividend.getCurrency(),
-                                dividend.getCode(),
-                                getDividendRevenueModel(dividend),
-                                getDividendTaxModel(order, dividend))
-                );
-            } else {
-                if (div.getCode().equals(dividend.getCode()) && dividend.getDate().equals(div.getDividendRevenueModel().getTimestamp())) {
-                    div.getDividendRevenueModel().addAmountInCur(dividend.getAmount());
-                } else {
-                    log.error("тикет {} в две даты {} и {}", dividend.getCode(), dividend.getDate(), div.getDividendRevenueModel().getTimestamp());
-                }
-            }
-        });
-        return currencyCodeDividendMap;
+    private Map<String, Map<String, Map<Timestamp, Map<String, DividendModel>>>> addDividend(Order order, String year) {
+        Map<String, Map<String, Map<Timestamp, Map<String, DividendModel>>>> accountCurrencyCodeDividendMap = new LinkedHashMap<>();
+        orderAccountService.findAll(order, year).forEach(orderAccount ->
+                dividendService.findAll(orderAccount, Sort.by("orderAccount", "date", "code")).forEach(dividend -> {
+                    Map<String, DividendModel> codeDividendMap = accountCurrencyCodeDividendMap
+                            .computeIfAbsent(orderAccount.getAccount(), s -> new LinkedHashMap<>())
+                            .computeIfAbsent(dividend.getCurrency(), s -> new LinkedHashMap<>())
+                            .computeIfAbsent(dividend.getDate(), timestamp -> new LinkedHashMap<>());
+                    DividendModel div = codeDividendMap.get(dividend.getCode());
+                    if (div == null) {
+                        codeDividendMap.put(dividend.getCode(),
+                                new DividendModel(
+                                        dividend.getCurrency(),
+                                        dividend.getCode(),
+                                        getDividendRevenueModel(dividend),
+                                        getDividendTaxModel(orderAccount, dividend))
+                        );
+                    } else {
+                        if (div.getCode().equals(dividend.getCode()) && dividend.getDate().equals(div.getDividendRevenueModel().getTimestamp())) {
+                            div.getDividendRevenueModel().addAmountInCur(dividend.getAmount());
+                        } else {
+                            log.error("тикет {} в две даты {} и {}", dividend.getCode(), dividend.getDate(), div.getDividendRevenueModel().getTimestamp());
+                        }
+                    }
+                }));
+        return accountCurrencyCodeDividendMap;
     }
 
     private DividendRevenueModel getDividendRevenueModel(Dividend dividend) {
@@ -229,10 +244,10 @@ public class DumpDividend {
         return dividendRevenueModel;
     }
 
-    private DividendTaxModel getDividendTaxModel(Order order, Dividend dividend) {
+    private DividendTaxModel getDividendTaxModel(OrderAccount orderAccount, Dividend dividend) {
         AtomicReference<Double> amount = new AtomicReference<>(0d);
         dividendTaxService
-                .findAll(order, dividend.getCode(), dividend.getDate(), Sort.by("order", "code", "date"))
+                .findAll(orderAccount, dividend.getCode(), dividend.getDate(), Sort.by("orderAccount", "code", "date"))
                 .forEach(dividendTax -> amount.set(amount.get() + dividendTax.getAmount()));
         amount.set(amount.get() * -1);
         DividendTaxModel dividendRevenueModel = new DividendTaxModel(
@@ -243,5 +258,6 @@ public class DumpDividend {
         valuteService.updateCurrObject(dividendRevenueModel);
         return dividendRevenueModel;
     }
+
 
 }

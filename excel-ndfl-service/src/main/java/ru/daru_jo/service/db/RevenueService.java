@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.entity.Revenue;
 import ru.daru_jo.repository.RevenueRepository;
 import ru.daru_jo.specifications.Specifications;
@@ -24,9 +24,9 @@ public class RevenueService {
         revenueRepository.save(revenue);
     }
 
-    public List<Revenue> findAll(Order order){
+    public List<Revenue> findAll(OrderAccount orderAccount){
         Specification<Revenue> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", order);
+        specification = Specifications.eq(specification,"order", orderAccount);
         return revenueRepository.findAll(specification, Sort.by("order").and(Sort.by("category").and(Sort.by("companyName").and(Sort.by("timestamp")))));
     }
 

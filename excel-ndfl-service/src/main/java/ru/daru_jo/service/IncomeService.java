@@ -6,11 +6,14 @@ import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.helper.ExcelHelper;
+import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.OrderService;
 import ru.daru_jo.service.export.DumpCoupon;
 import ru.daru_jo.service.export.DumpDeal;
 import ru.daru_jo.service.export.DumpDividend;
+import ru.daru_jo.service.export.DumpPercent;
 
 import java.util.*;
 
@@ -19,11 +22,23 @@ import java.util.*;
 public class IncomeService {
 
     private ParserCSVService service;
+    private OrderAccountService orderAccountService;
+    private DumpPercent dumpPercent;
     private OrderService orderService;
 
     @Autowired
     public void setService(ParserCSVService service) {
         this.service = service;
+    }
+
+    @Autowired
+    public void setOrderAccountService(OrderAccountService orderAccountService) {
+        this.orderAccountService = orderAccountService;
+    }
+
+    @Autowired 
+    public void setOrderService(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     private DumpDeal dumpDeal;
@@ -49,21 +64,40 @@ public class IncomeService {
     public void init() {
         try {
 
-
             Order order = new Order("Daru");
-            orderService.saveOrder(order);
-            service.readDataLineByLine(order, "c:\\11\\csv\\eng.csv");
-            dump("C:/java/NDFLBroker/report/ss" + order.getId() + ".xlsx", order);
+            orderService.save(order);
+
+            OrderAccount orderAccount = new OrderAccount();
+            orderAccountService.save(orderAccount);
+            order.getOrderAccountList().add(orderAccount);
+            service.readDataLineByLine(orderAccount, "c:\\11\\csv\\eng.csv");
+            if (order.getYearList().contains(orderAccount.getYear())) {
+                order.getYearList().add(orderAccount.getYear());
+            }
+
+            orderAccount = new OrderAccount();
+            orderAccountService.save(orderAccount);
+            order.getOrderAccountList().add(orderAccount);
+            service.readDataLineByLine(orderAccount, "c:\\11\\csv\\eng2.csv");
+            if (order.getYearList().contains(orderAccount.getYear())) {
+                order.getYearList().add(orderAccount.getYear());
+            }
+
+            orderService.save(order);
+            order.getYearList().forEach(year ->
+                    dump("C:/java/NDFLBroker/report/ss" + order.getId() + ".xlsx", order, year)
+            );
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
     }
 
-    public void dump(String fileName, Order order) {
+    public void dump(String fileName, Order order, String year) {
         Workbook wb = ExcelHelper.readWorkbookResource("otchet.xlsx");
-        dumpDeal.dump(wb, ExcelHelper.createNewList(wb, "Сделки2"), order);
-        dumpCoupon.dump(wb, ExcelHelper.createNewList(wb, "Купоны2"), order);
-        dumpDividend.dump(wb, ExcelHelper.createNewList(wb, "Дивиденты2"), order);
+        dumpDeal.dump(wb, ExcelHelper.createNewList(wb, "Сделки2"), order, year);
+        dumpCoupon.dump(wb, ExcelHelper.createNewList(wb, "Купоны2"), order, year);
+        dumpDividend.dump(wb, ExcelHelper.createNewList(wb, "Дивиденды2"), order, year);
+        dumpPercent.dump(wb, ExcelHelper.createNewList(wb, "Проценты2"), order, year);
         ExcelHelper.writeWorkbook(wb, fileName);
 
     }
@@ -103,6 +137,7 @@ public class IncomeService {
 
         cell.setCellValue(amount);
     }
+
     public static void addCellPercent(Workbook wb, Row row, Integer cellStart, Double amount, CellStyle style) {
         if (amount == null)
             return;
@@ -116,7 +151,7 @@ public class IncomeService {
     }
 
     public static void addCell(Row row, int cellStart, Double value, CellStyle style) {
-        if(value== null){
+        if (value == null) {
             return;
         }
         Cell cell = row.createCell(cellStart);
@@ -202,7 +237,7 @@ public class IncomeService {
     }
 
     @Autowired
-    public void setOrderService(OrderService orderService) {
-        this.orderService = orderService;
+    public void setDumpPercent(DumpPercent dumpPercent) {
+        this.dumpPercent = dumpPercent;
     }
 }
