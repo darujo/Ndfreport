@@ -11,8 +11,13 @@
     <modules>
         <module>excel-ndfl-service</module>
         <module>api-controller</module>
+        <module>api-repository</module>
+        <module>api-integration-helper</module>
+        <module>api-integration</module>
         <module>front-ndfl-service</module>
         <module>gateway-ndfl-service</module>
+        <module>robokassa-service</module>
+        <module>api-dto</module>
     </modules>
 
 

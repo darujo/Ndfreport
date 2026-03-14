@@ -1,0 +1,19 @@
+<?php
+$merchantLogin = "ndflbroker";
+$password1 = "kOGpnJ35xkTji5mO6mR4-test";
+$invId = 12;
+$outSum = "990.00";
+$description = "Оплата заказа №12";
+
+$signature = md5("$merchantLogin:$outSum:$invId:$password1");
+?>
+
+<form action="https://auth.robokassa.ru/Merchant/Index.aspx" method="POST">
+  <input  name="MerchantLogin" value="ndflbroker" />
+  <input  name="OutSum" value="990.00" />
+  <input  name="InvId" value="12" />
+  <input  name="Description" value="описание" />
+  <input name="SignatureValue" value="cbe076e81be598fdf4008f305c6639fb" />
+  <input  name="IsTest" value="1" />
+  <button type="submit">Оплатить через Robokassa</button>
+</form>

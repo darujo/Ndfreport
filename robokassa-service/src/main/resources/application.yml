@@ -1,0 +1,29 @@
+server:
+  port: 8280
+  servlet:
+    context-path: /app-robo
+spring:
+#  flyway:
+#    enabled: true
+  main:
+    banner-mode: off
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/ndfl?options=--search_path%3Dndfl-pay
+    username: postgres
+    password: 5397
+
+
+  jpa:
+    database: postgresql
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+
+  jackson:
+    default-property-inclusion: non_absent
+
+robokassa:
+  merchantLogin: "ndflbroker"
+  password1: "kOGpnJ35xkTji5mO6mR4-test"
+  password2: "nyBdgS3mB2nA0ikpJU12-test"
