@@ -1,21 +1,21 @@
 <form id="PayRobo" action="https://auth.robokassa.ru/Merchant/Index.aspx" method="POST">
   <label>
-    <input  name="MerchantLogin" ng-model="Pay.merchantLogin" />
+    <input id="MerchantLogin" name="MerchantLogin" ng-model="Pay.merchantLogin" />
   </label>
   <label>
-    <input  name="OutSum" ng-model="Pay.outSum" />
+    <input id="OutSum" name="OutSum" ng-model="Pay.outSum" />
   </label>
   <label>
-    <input  name="InvId" ng-model="Pay.invId" />
+    <input id="InvId" name="InvId" ng-model="Pay.invId" />
   </label>
   <label>
-    <input  name="Description" ng-model="Pay.description" />
+    <input id="Description" name="Description" ng-model="Pay.description" />
   </label>
   <label>
-    <input name="SignatureValue" ng-model="Pay.signatureValue" />
+    <input id="SignatureValue" name="SignatureValue" ng-model="Pay.signatureValue" />
   </label>
   <label>
-    <input  name="IsTest" ng-model="Pay.isTest" />
+    <input id="IsTest" name="IsTest" ng-model="Pay.isTest" />
   </label>
   <button ng-if="Pay" type="submit">�������� ����� Robokassa</button>
 </form>

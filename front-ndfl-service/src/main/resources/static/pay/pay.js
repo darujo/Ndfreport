@@ -31,7 +31,13 @@ angular.module('ndflService').controller('payController', function ($scope, $htt
                 if($scope.Pay.isCompleted){
                     $scope.Cancel();
                 } else{
-                    // document.getElementById("PayRobo").submit();
+                    document.getElementById("MerchantLogin").value = $scope.Pay.merchantLogin;
+                    document.getElementById("OutSum").value = $scope.Pay.outSum;
+                    document.getElementById("InvId").value = $scope.Pay.invId;
+                    document.getElementById("Description").value = $scope.Pay.description;
+                    document.getElementById("SignatureValue").value = $scope.Pay.signatureValue;
+                    document.getElementById("IsTest").value = $scope.Pay.isTest;
+                    document.getElementById("PayRobo").submit();
                 }
                 $scope.load = false;
             }, function errorCallback(response) {
