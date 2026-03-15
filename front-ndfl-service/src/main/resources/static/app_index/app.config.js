@@ -4,11 +4,14 @@ angular.module('ndflService').config(["$ocLazyLoadProvider", function ($ocLazyLo
         'debug': true, // For debugging 'true/false'
         'events': true, // For Event 'true/false'
         'modules': [{ // Set modules initially
-            name: 'agreement', // module
-            files: ['agreement/agreement.js?ver='.toLowerCase() + ver]
+            name: 'orderList', // module
+            files: ['order/order_list.js?ver='.toLowerCase() + ver]
         }, {
             name: 'welcome', // module
             files: ['welcome/welcome.js?ver=' + ver]
+        }, {
+            name: 'pay', // module
+            files: ['pay/pay.js?ver=' + ver]
         }
         ]
     });

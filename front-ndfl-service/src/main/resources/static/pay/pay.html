@@ -1,0 +1,24 @@
+<form id="PayRobo" action="https://auth.robokassa.ru/Merchant/Index.aspx" method="POST">
+  <label>
+    <input  name="MerchantLogin" ng-model="Pay.merchantLogin" />
+  </label>
+  <label>
+    <input  name="OutSum" ng-model="Pay.outSum" />
+  </label>
+  <label>
+    <input  name="InvId" ng-model="Pay.invId" />
+  </label>
+  <label>
+    <input  name="Description" ng-model="Pay.description" />
+  </label>
+  <label>
+    <input name="SignatureValue" ng-model="Pay.signatureValue" />
+  </label>
+  <label>
+    <input  name="IsTest" ng-model="Pay.isTest" />
+  </label>
+  <button ng-if="Pay" type="submit">�������� ����� Robokassa</button>
+</form>
+<div class="wait_1_2">
+  <img ng-if="load" src="../gif/wait1_2.gif" alt="Лучше ждите" width="300" height="300"/>
+</div>

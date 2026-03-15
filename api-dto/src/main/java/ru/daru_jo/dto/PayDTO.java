@@ -68,7 +68,7 @@ public class PayDTO {
     }
 
     @SuppressWarnings("unused")
-    public Boolean getCompleted() {
+    public Boolean getIsCompleted() {
         return isCompleted;
     }
 //MerchantLogin=ndflbroker&OutSum=990.00&InvId=12&Description=%EE%EF%E8%F1%E0%ED%E8%E5&SignatureValue=cbe076e81be598fdf4008f305c6639fb&IsTest=1"

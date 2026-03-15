@@ -4,14 +4,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ru.daru_jo.dto.PayDTO;
 import ru.daru_jo.entity.Order;
 import ru.daru_jo.entity.OrderAccount;
+import ru.daru_jo.integration.PayServiceIntegration;
 import ru.daru_jo.model.RunnableNotException;
 import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.OrderService;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,7 +26,12 @@ public class ScheduleService implements AutoCloseable {
     private ParserCSVService parserCSVService;
     private OrderAccountService orderAccountService;
     private OrderService orderService;
+    private PayServiceIntegration payServiceIntegration;
 
+    @Autowired
+    public void setPayServiceIntegration(PayServiceIntegration payServiceIntegration) {
+        this.payServiceIntegration = payServiceIntegration;
+    }
     @Autowired
     public void setParserCSVService(ParserCSVService parserCSVService) {
         this.parserCSVService = parserCSVService;
@@ -71,17 +79,24 @@ public class ScheduleService implements AutoCloseable {
                     orderService.save(order);
                     try {
                         parserCSVService.readDataLineByLine(orderAccount, new InputStreamReader(multipartFile.getInputStream()));
-                        if (order.getYearList().contains(orderAccount.getYear())) {
+                        if(order.getYearList() == null){
+                            order.setYearList(new ArrayList<>());
+                        }
+                        if (!order.getYearList().contains(orderAccount.getYear())) {
                             order.getYearList().add(orderAccount.getYear());
                         }
 
                         orderService.save(order);
+
+
                     } catch (IOException e) {
                         orderAccount.setError(e.getMessage());
                         orderAccountService.save(orderAccount);
                         throw new RuntimeException(e);
                     }
                 });
+        PayDTO payDTO = payServiceIntegration.sendPay(new PayDTO(null, null, order.getId(), 1990.90, "Оплата заказа " + order.getId(), null, null, null, null));
+
         return new RunnableNotException(runnable);
     }
 }

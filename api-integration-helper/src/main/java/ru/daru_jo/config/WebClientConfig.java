@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
-import ru.darujo.properties.PropertyConnectionInterface;
+import ru.daru_jo.properties.PropertyConnectionInterface;
 
 import java.util.concurrent.TimeUnit;
 

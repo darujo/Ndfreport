@@ -1,4 +1,4 @@
-package service;
+package ru.daru_jo.service;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;

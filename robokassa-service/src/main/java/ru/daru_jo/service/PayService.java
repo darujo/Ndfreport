@@ -1,10 +1,12 @@
-package service;
+package ru.daru_jo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import repository.PayRepository;
+import ru.daru_jo.repository.PayRepository;
 import ru.daru_jo.entity.Pay;
 import ru.daru_jo.exceptions.ResourceNotFoundRunTime;
 import ru.daru_jo.specifications.Specifications;
@@ -21,9 +23,13 @@ public class PayService {
         this.payRepository = payRepository;
     }
 
-    public  void  sendPay(Pay pay){
+    public  Pay sendPay(Pay pay){
         getHash(pay);
-        save(pay);
+        if(pay.getMagCode() == null){
+            pay.setMagCode(merchantLogin);
+        }
+
+        return save(pay);
 
     }
     public Pay save (Pay pay){
@@ -47,9 +53,13 @@ public class PayService {
         return payRepository.findById(id).orElseThrow(() ->  new ResourceNotFoundRunTime("Не найден запрос платежа с id = " + id));
     }
 
-    public List<Pay> getPayList(List<Long> oderIdList) {
+    public Page<Pay> getPayList(List<Long> oderIdList) {
         Specification<Pay> sp = Specification.unrestricted();
         sp = Specifications.in(sp,"orderId", oderIdList);
-        return payRepository.findAll(sp);
+        return new PageImpl<>(payRepository.findAll(sp));
+    }
+
+    public Pay getPay(Long orderId) {
+        return payRepository.findByOrderId(orderId).orElseThrow(() ->  new ResourceNotFoundRunTime("Не найден запрос платежа с id = " + orderId));
     }
 }

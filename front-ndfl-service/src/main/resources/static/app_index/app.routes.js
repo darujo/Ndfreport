@@ -11,12 +11,21 @@ angular.module('ndflService').config(function ($routeProvider) {
                 }]
             }
         })
-        .when('/', {
-            templateUrl: 'agreement/agreement.html',
-            controller: 'agreementController',
+        .when('/order', {
+            templateUrl: 'order/order_list.html',
+            controller: 'orderListController',
             resolve: {
                 LazyLoadCtrl: ['$ocLazyLoad', function ($ocLazyLoad) {
-                    return $ocLazyLoad.load('agreement'); // Resolve promise and load before view
+                    return $ocLazyLoad.load('orderList'); // Resolve promise and load before view
+                }]
+            }
+        })
+        .when('/pay', {
+            templateUrl: 'pay/pay.html',
+            controller: 'payController',
+            resolve: {
+                LazyLoadCtrl: ['$ocLazyLoad', function ($ocLazyLoad) {
+                    return $ocLazyLoad.load('pay'); // Resolve promise and load before view
                 }]
             }
         })

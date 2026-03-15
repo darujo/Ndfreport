@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -31,6 +29,6 @@ public class Pay {
     private String email;
     @Column(name = "is_test")
     private boolean isTest;
-    @Column(name = "is_test")
+    @Column(name = "is_completed")
     private boolean isCompleted;
 }

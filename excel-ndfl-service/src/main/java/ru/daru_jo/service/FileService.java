@@ -41,13 +41,13 @@ public class FileService {
                             File file = new File(fileName);
                             files.add(file);
                         } catch (IOException e) {
-                            log.error( e.getMessage(),e);
+                            log.error(e.getMessage(), e);
 
                         }
                     }
             );
         }
-        scheduleService.getTaskParsFiles(order,multipartFiles).run();
+        scheduleService.getTaskParsFiles(order, multipartFiles).run();
         return files;
     }
 }

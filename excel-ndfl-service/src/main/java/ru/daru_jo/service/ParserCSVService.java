@@ -10,10 +10,9 @@ import ru.daru_jo.service.db.*;
 import ru.daru_jo.type.AssetType;
 import ru.daru_jo.type.OperationType;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.Reader;
 import java.sql.Timestamp;
+import java.util.Arrays;
 
 @Slf4j
 @Service
@@ -63,16 +62,6 @@ public class ParserCSVService {
     }
 
     @Transactional
-    public void readDataLineByLine(OrderAccount orderAccount, String file) {
-        try {
-            FileReader filereader = new FileReader(file);
-            readDataLineByLine(orderAccount, filereader);
-        } catch (FileNotFoundException e) {
-            log.error(e.getMessage(), e);
-        }
-    }
-
-    @Transactional
     public void readDataLineByLine(OrderAccount orderAccount, Reader reader) {
 
         try {
@@ -91,6 +80,7 @@ public class ParserCSVService {
                     parserLine(orderAccount, nextRecord);
                 } catch (Exception e) {
                     orderAccount.setError(e.getMessage());
+                    log.error(Arrays.toString(nextRecord));
                     log.error(e.getMessage(), e);
                 }
 
@@ -203,14 +193,17 @@ public class ParserCSVService {
      */
 
     private void saveBrokerInterestPaid(OrderAccount orderAccount, String[] record) {
-        Expenses expenses = new Expenses(
-                record[4],
-                getDateForDate(record[3]),
-                Double.parseDouble(record[5]),
-                record[2],
-                orderAccount,
-                OperationType.EXPENSES_INTEREST_PAID.toString());
-        expensesService.save(expenses);
+        if(!record[2].startsWith("Total")
+        && !record[1].equals("Header")) {
+            Expenses expenses = new Expenses(
+                    record[4],
+                    getDateForDate(record[3]),
+                    Double.parseDouble(record[5]),
+                    record[2],
+                    orderAccount,
+                    OperationType.EXPENSES_INTEREST_PAID.toString());
+            expensesService.save(expenses);
+        }
     }
 
     /**
@@ -221,26 +214,30 @@ public class ParserCSVService {
      */
 
     private void saveFees(OrderAccount orderAccount, String[] record) {
-        double amount = Double.parseDouble(record[5]);
-        if (amount > 0) {
-            Percent percent = new Percent(
-                    null,
-                    record[5],
-                    getDateForDate(record[4]),
-                    amount,
-                    record[3],
-                    orderAccount,
-                    OperationType.INTEREST_FEES.toString());
-            percentService.save(percent);
-        } else if (amount < 0) {
-            Expenses expenses = new Expenses(
-                    record[5],
-                    getDateForDate(record[4]),
-                    amount,
-                    record[3],
-                    orderAccount,
-                    OperationType.EXPENSES_FEES.toString());
-            expensesService.save(expenses);
+        if(!record[6].equals("Amount")
+        && !record[2].startsWith("Total")
+        && !record[1].startsWith("Notes")) {
+            double amount = Double.parseDouble(record[6]);
+            if (amount > 0) {
+                Percent percent = new Percent(
+                        null,
+                        record[5],
+                        getDateForDate(record[4]),
+                        amount,
+                        record[3],
+                        orderAccount,
+                        OperationType.INTEREST_FEES.toString());
+                percentService.save(percent);
+            } else if (amount < 0) {
+                Expenses expenses = new Expenses(
+                        record[5],
+                        getDateForDate(record[4]),
+                        amount,
+                        record[3],
+                        orderAccount,
+                        OperationType.EXPENSES_FEES.toString());
+                expensesService.save(expenses);
+            }
         }
     }
 
@@ -251,15 +248,18 @@ public class ParserCSVService {
      */
 
     private void saveInterest(OrderAccount orderAccount, String[] record) {
-        Percent percent = new Percent(
-                null,
-                record[4],
-                getDateForDate(record[3]),
-                Double.parseDouble(record[5]),
-                record[2],
-                orderAccount,
-                OperationType.INTEREST.toString());
-        percentService.save(percent);
+        if(!record[2].startsWith("Total")
+        && !record[1].startsWith("Header")) {
+            Percent percent = new Percent(
+                    null,
+                    record[4],
+                    getDateForDate(record[3]),
+                    Double.parseDouble(record[5]),
+                    record[2],
+                    orderAccount,
+                    OperationType.INTEREST.toString());
+            percentService.save(percent);
+        }
     }
 
     /**
@@ -372,12 +372,15 @@ public class ParserCSVService {
 
     private void saveCoupon(OrderAccount orderAccount, String[] record) {
         String code = getCodeCoupon(record[4]);
-        Coupon coupon = new Coupon(null,
-                code,
-                getDateForDate(record[3]),
-                Double.parseDouble(record[5]),
-                record[2],
-                orderAccount);
+        Bond coupon = new Bond
+                (null,
+                        code,
+                        getDateForDate(record[3]),
+                        Double.parseDouble(record[5]),
+                        record[2],
+                        orderAccount,
+                        OperationType.COUPON_PAYMENT.toString());
+
         bondService.save(coupon);
     }
 
@@ -388,13 +391,13 @@ public class ParserCSVService {
                 :
                 // TODO Правильное русское название в двух местах
                 record[4].substring("Начисленные проценты за покупку ".length());
-        CouponNKD coupon = new CouponNKD(null,
-                code,
-                getDateForDate(record[3]),
-                Double.parseDouble(record[5]),
-                record[2],
-                orderAccount);
-        bondService.save(coupon);
+        Bond bond = new Bond
+                (null,
+                        code,
+                        getDateForDate(record[3]),
+                        Double.parseDouble(record[5]), record[2], orderAccount, OperationType.COUPON_NKD.toString());
+
+        bondService.save(bond);
     }
 
     private void saveNKDMinusCoupon(OrderAccount orderAccount, String[] record) {
@@ -403,12 +406,15 @@ public class ParserCSVService {
                 record[4].substring("Sold Accrued Interest ".length())
                 :
                 record[4].substring("Начисленные проценты за продажу ".length());
-        CouponNKDMinus coupon = new CouponNKDMinus(null,
-                code,
-                getDateForDate(record[3]),
-                Double.parseDouble(record[5]),
-                record[2],
-                orderAccount);
+        Bond coupon = new Bond
+                (null,
+                        code,
+                        getDateForDate(record[3]),
+                        Double.parseDouble(record[5]),
+                        record[2],
+                        orderAccount,
+                        OperationType.COUPON_NKD_MINUS.toString());
+
         bondService.save(coupon);
     }
 

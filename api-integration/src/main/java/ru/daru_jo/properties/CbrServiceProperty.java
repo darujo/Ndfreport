@@ -1,7 +1,6 @@
-package ru.daru_jo.integration;
+package ru.daru_jo.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import ru.daru_jo.properties.ServiceProperty;
 
 @ConfigurationProperties( prefix = "integration.cbr")
 public class CbrServiceProperty extends ServiceProperty {

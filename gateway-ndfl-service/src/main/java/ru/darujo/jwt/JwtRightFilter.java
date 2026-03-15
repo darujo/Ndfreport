@@ -40,21 +40,21 @@ public abstract class JwtRightFilter extends AbstractGatewayFilterFactory<JwtRig
     @Override
     public @NonNull GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
-            ServerHttpRequest request = exchange.getRequest();
-
-            if (!isAuthMissing(request)) {
-                final String token = getAuthHeaders(request);
-                if (jwtUtil.isInvalid(token)) {
-                    return this.onError(exchange, "Токен просрочен.", HttpStatus.UNAUTHORIZED);
-                }
-                try {
-                    exchange = populateRequestHeader(exchange, token);
-                } catch (RuntimeException ex) {
-                    return this.onError(exchange, "gateWay: " + ex.getMessage(), HttpStatus.FORBIDDEN);
-                }
-            } else {
-                return this.onError(exchange, "Токен отсутствует", HttpStatus.UNAUTHORIZED);
-            }
+//            ServerHttpRequest request = exchange.getRequest();
+//
+//            if (!isAuthMissing(request)) {
+//                final String token = getAuthHeaders(request);
+//                if (jwtUtil.isInvalid(token)) {
+//                    return this.onError(exchange, "Токен просрочен.", HttpStatus.UNAUTHORIZED);
+//                }
+//                try {
+//                    exchange = populateRequestHeader(exchange, token);
+//                } catch (RuntimeException ex) {
+//                    return this.onError(exchange, "gateWay: " + ex.getMessage(), HttpStatus.FORBIDDEN);
+//                }
+//            } else {
+//                return this.onError(exchange, "Токен отсутствует", HttpStatus.UNAUTHORIZED);
+//            }
             return chain.filter(exchange);
         };
     }

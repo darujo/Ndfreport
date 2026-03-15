@@ -7,7 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import ru.daru_jo.dto.PayDTO;
-import ru.darujo.exceptions.ResourceNotFoundRunTime;
+import ru.daru_jo.exceptions.ResourceNotFoundException;
+import ru.daru_jo.exceptions.ResourceNotFoundRunTime;
 
 import java.util.List;
 
@@ -38,23 +39,24 @@ public class PayServiceIntegration extends ServiceIntegration {
         }
     }
 
-    public void savePay(PayDTO payDTO) {
+    public PayDTO sendPay(PayDTO payDTO) {
 
         try {
-            webClient.post().uri("/send")
+            return webClient.post().uri("/send")
                     .bodyValue(payDTO)
                     .retrieve()
                     .onStatus(httpStatus -> httpStatus.value() == HttpStatus.NOT_FOUND.value(),
                             cR -> getMessage(cR, "Что-то пошло не так не удалось получить отпуск за период"))
-                    .bodyToMono(Void.class)
+                    .bodyToMono(PayDTO.class)
                     .doOnError(throwable -> log.error(throwable.getMessage()))
                     .block();
         } catch (RuntimeException ex) {
-            throw new ResourceNotFoundRunTime("Что-то пошло не так не удалось получить Календарь (api-calendar) не доступен подождите или обратитесь к администратору " + ex.getMessage());
+            log.error("/send",ex);
+            throw new ResourceNotFoundRunTime("Что-то пошло не так не удалось получить Календарь (api-pay) не доступен подождите или обратитесь к администратору " + ex.getMessage());
         }
     }
 
-    public PayDTO getVacation(Long id) {
+    public PayDTO getPay(Long id) throws ResourceNotFoundException {
         String uri = "/" + id;
         try {
             return webClient.get().uri(uri)
@@ -65,8 +67,8 @@ public class PayServiceIntegration extends ServiceIntegration {
                     .doOnError(throwable -> log.error(throwable.getMessage()))
                     .block();
         } catch (RuntimeException ex) {
-            log.error(uri, ex);
-            throw new ResourceNotFoundRunTime("Что-то пошло не так не удалось получить Календарь (api-calendar) не доступен подождите или обратитесь к администратору " + ex.getMessage());
+//            log.error(uri, ex);
+            throw new ResourceNotFoundException("Что-то пошло не так не удалось получить платеж (api-pay) не доступен подождите или обратитесь к администратору " + ex.getMessage());
         }
     }
 

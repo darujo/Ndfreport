@@ -1,0 +1,58 @@
+<div id="RoleList" class="head_text_elem">
+    <div class="filter container_filter">
+<!--        <details class="details_block">-->
+<!--            <summary class="p-head">Фильтр</summary>-->
+
+<!--            <form novalidate ng-submit="filterProject()" class="filter">-->
+<!--                <div class="filter">-->
+<!--                    <div class="filter_block">-->
+
+<!--                        <div class="horiz">-->
+<!--                            <label for="CodeFilter" class="p-head">Код:</label>-->
+<!--                            <input class="vvod30mar" type="text" id="CodeFilter"-->
+<!--                                   ng-model="Filt.code"/>-->
+<!--                            <label for="NameFilter" class="p-head">Наименование:</label>-->
+<!--                            <input class="vvod30mar" type="text" id="NameFilter"-->
+<!--                                   ng-model="Filt.name"/>-->
+<!--                        </div>-->
+<!--                        <button type="submit" class="head_button" id="FilterButton">Применить</button>-->
+<!--                        <button type="button" class="head_button" ng-click="clearFilter(true)">Сбросить</button>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </form>-->
+<!--        </details>-->
+        <button class="head_button" ng-click="createOrder()">Создать новый заказ</button>
+
+    </div>
+
+    <h1>Список заказов</h1>
+    <table>
+        <tr>
+            <td class="table_head2">Номер заказа</td>
+            <td class="table_head2">Года отчетов в заказе</td>
+
+            <td class="table_head2"></td>
+            <td class="table_head2"></td>
+
+
+        </tr>
+        <tbody>
+        <tr ng-repeat="order in OrderList">
+
+            <td>{{order.id}}</td>
+            <td>{{order.yearList}}</td>
+            <td>{{order.status}}</td>
+            <td>
+                <button ng-click="payOrder(order.id)">Оплатить</button>
+            </td>
+            <td>
+                <button ng-click="deleteOrder(Order.id)">Удалить</button>
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+    <div class="wait_1_2">
+        <img ng-if="load" src="../gif/wait1_2.gif" alt="Лучше ждите" width="300" height="300"/>
+    </div>
+</div>

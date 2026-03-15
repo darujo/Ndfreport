@@ -1,7 +1,7 @@
 server:
-  port: 8280
+  port: 8282
   servlet:
-    context-path: /app-robo
+     context-path: /app-robo
 spring:
 #  flyway:
 #    enabled: true
@@ -15,10 +15,10 @@ spring:
 
 
   jpa:
-    database: postgresql
     show-sql: false
     hibernate:
       ddl-auto: update
+    open-in-view: false
 
   jackson:
     default-property-inclusion: non_absent
