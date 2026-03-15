@@ -1,3 +1,4 @@
+
 angular.module('ndflService').controller('payController', function ($scope, $http, $location) {
 
     const constPatchPay = window.location.origin + '/pay-service';
@@ -10,7 +11,12 @@ angular.module('ndflService').controller('payController', function ($scope, $htt
             alert("Подождите обрабатывается предыдущий запрос по платежам")
         } else {
             $scope.load = true;
-            $scope.Pay = null;
+            $scope.Pay = {isCompleted: true,
+                merchantLogin:null,
+                outSum:null,
+            invId:null,
+            signatureValue:null,
+            isTest:null};
             let Filter;
             Filter = $scope.Filt;
             console.log(Filter);
@@ -28,9 +34,9 @@ angular.module('ndflService').controller('payController', function ($scope, $htt
                 console.log("response,data :");
                 console.log(response.data);
                 $scope.Pay = response.data;
-                if($scope.Pay.isCompleted){
+                if ($scope.Pay && $scope.Pay.isCompleted) {
                     $scope.Cancel();
-                } else{
+                } else {
                     document.getElementById("MerchantLogin").value = $scope.Pay.merchantLogin;
                     document.getElementById("OutSum").value = $scope.Pay.outSum;
                     document.getElementById("InvId").value = $scope.Pay.invId;
@@ -59,7 +65,6 @@ angular.module('ndflService').controller('payController', function ($scope, $htt
     $scope.Cancel = function () {
         $location.path('/order');
     }
-
 
 
     $scope.Filt = {}
