@@ -11,12 +11,14 @@ angular.module('ndflService').controller('payController', function ($scope, $htt
             alert("Подождите обрабатывается предыдущий запрос по платежам")
         } else {
             $scope.load = true;
-            $scope.Pay = {isCompleted: true,
-                merchantLogin:null,
-                outSum:null,
-            invId:null,
-            signatureValue:null,
-            isTest:null};
+            $scope.Pay = {
+                merchantLogin: null,
+                outSum: null,
+                isCompleted: true,
+                invId: null,
+                signatureValue: null,
+                isTest: null
+            };
             let Filter;
             Filter = $scope.Filt;
             console.log(Filter);
