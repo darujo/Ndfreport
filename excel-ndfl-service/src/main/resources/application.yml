@@ -25,3 +25,4 @@ spring:
 
 file:
   save-into: "c:\\11"
+  save-report: "C:/java/NDFLBroker/report/ss"

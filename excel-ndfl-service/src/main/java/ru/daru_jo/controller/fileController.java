@@ -1,10 +1,13 @@
 package ru.daru_jo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 import ru.daru_jo.entity.Order;
 import ru.daru_jo.service.FileService;
@@ -34,4 +37,13 @@ public class fileController {
         fileService.saveFiles(order, files);
         return order;
     }
+
+    @GetMapping("/async-download")
+    public DeferredResult<ResponseEntity<Resource>> asyncDownload(@RequestParam Long orderId) {
+        DeferredResult<ResponseEntity<Resource>> deferredResult = new DeferredResult<>(30000L); // 30-секундный таймаут
+        fileService.getOrderReport(orderId, deferredResult);
+        return deferredResult;
+    }
+
+
 }

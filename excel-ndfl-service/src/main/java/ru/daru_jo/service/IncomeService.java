@@ -1,21 +1,16 @@
 package ru.daru_jo.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import ru.daru_jo.dto.JavaFileToMultipartFile;
 import ru.daru_jo.entity.Order;
 import ru.daru_jo.helper.ExcelHelper;
-import ru.daru_jo.service.db.OrderService;
 import ru.daru_jo.service.export.DumpCoupon;
 import ru.daru_jo.service.export.DumpDeal;
 import ru.daru_jo.service.export.DumpDividend;
 import ru.daru_jo.service.export.DumpPercent;
 
-import java.io.File;
 import java.util.*;
 
 @Slf4j
@@ -23,19 +18,6 @@ import java.util.*;
 public class IncomeService {
 
     private DumpPercent dumpPercent;
-    private OrderService orderService;
-    private ScheduleService scheduleService;
-
-    @Autowired
-    public void setScheduleService(ScheduleService scheduleService) {
-        this.scheduleService = scheduleService;
-    }
-
-
-    @Autowired 
-    public void setOrderService(OrderService orderService) {
-        this.orderService = orderService;
-    }
 
     private DumpDeal dumpDeal;
     private DumpCoupon dumpCoupon;
@@ -56,43 +38,6 @@ public class IncomeService {
         this.dumpDividend = dumpDividend;
     }
 
-    @PostConstruct
-    public void init() {
-        try {
-
-            Order order = new Order("Daru");
-            orderService.save(order);
-            List<MultipartFile> files = new ArrayList<>();
-            files.add(new JavaFileToMultipartFile(new File("c:\\11\\csv\\eng.csv")));
-            files.add(new JavaFileToMultipartFile(new File("c:\\11\\csv\\eng2.csv")));
-//            OrderAccount orderAccount = new OrderAccount();
-//            orderAccountService.save(orderAccount);
-//            order.getOrderAccountList().add(orderAccount);
-//            service.readDataLineByLine(orderAccount, "c:\\11\\csv\\eng.csv");
-//            if (order.getYearList() == null){
-//                order.setYearList( new ArrayList<>());
-//            }
-//            if (order.getYearList().contains(orderAccount.getYear())) {
-//                order.getYearList().add(orderAccount.getYear());
-//            }
-//
-//            orderAccount = new OrderAccount();
-//            orderAccountService.save(orderAccount);
-//            order.getOrderAccountList().add(orderAccount);
-//            service.readDataLineByLine(orderAccount, "c:\\11\\csv\\eng2.csv");
-//            if (order.getYearList().contains(orderAccount.getYear())) {
-//                order.getYearList().add(orderAccount.getYear());
-//            }
-//
-//            orderService.save(order);
-            scheduleService.addTaskPars(order ,files);
-//            order.getYearList().forEach(year ->
-//                    dump("C:/java/NDFLBroker/report/ss" + order.getId() + ".xlsx", order, year)
-//            );
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-    }
 
     public void dump(String fileName, Order order, String year) {
         Workbook wb = ExcelHelper.readWorkbookResource("otchet.xlsx");

@@ -3,7 +3,10 @@ package ru.daru_jo.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 import ru.daru_jo.entity.Order;
 
@@ -49,5 +52,9 @@ public class FileService {
         }
         scheduleService.getTaskParsFiles(order, multipartFiles).run();
         return files;
+    }
+
+    public void getOrderReport(Long orderId, DeferredResult<ResponseEntity<Resource>> deferredResult ){
+        scheduleService.getOrderReport(orderId, deferredResult);
     }
 }
