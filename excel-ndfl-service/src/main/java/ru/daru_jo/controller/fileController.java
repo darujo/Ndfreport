@@ -4,9 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 import ru.daru_jo.entity.Order;
@@ -30,8 +28,8 @@ public class fileController {
         this.orderService = orderService;
     }
 
-    @GetMapping("")
-    public Order saveFile(@RequestParam("file") List<MultipartFile> files,
+    @PostMapping("")
+    public Order saveFile(@RequestPart("file") List<MultipartFile> files,
                           @RequestHeader(required = false) String username){
         Order order = orderService.save(new Order(username));
         fileService.saveFiles(order, files);

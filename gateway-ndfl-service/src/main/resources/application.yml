@@ -79,6 +79,14 @@ spring:
                 - StripPrefix=1
                 - PrefixPath=/app-robo/v1/pay
                 - JwtAuthFilter
+            - id: robo-service
+              uri: "http://localhost:8282"
+              predicates:
+                - Path=/robopay/pay
+              filters:
+                - StripPrefix=1
+                - PrefixPath=/app-robo/v1/pay
+#                - JwtAuthFilter
 
             - id: front-service
               uri: "http://localhost:8285"
