@@ -30,12 +30,12 @@ public class PayServiceIntegration extends ServiceIntegration {
             return webClient.get().uri(uri)
                     .retrieve()
                     .onStatus(httpStatus -> httpStatus.value() == HttpStatus.NOT_FOUND.value(),
-                            cR -> getMessage(cR, "Что-то пошло не так не удалось получить работы за период"))
+                            cR -> getMessage(cR, "Что-то пошло не так не удалось получить платежи"))
                     .bodyToFlux(PayDTO.class).collectList()
                     .doOnError(throwable -> log.error(throwable.getMessage()))
                     .block();
         } catch (RuntimeException ex) {
-            throw new ResourceNotFoundRunTime("Что-то пошло не так не удалось получить Календарь (api-calendar) не доступен подождите или обратитесь к администратору " + ex.getMessage());
+            throw new ResourceNotFoundRunTime("(api-pay) не доступен подождите или обратитесь к администратору " + ex.getMessage());
         }
     }
 
@@ -46,29 +46,32 @@ public class PayServiceIntegration extends ServiceIntegration {
                     .bodyValue(payDTO)
                     .retrieve()
                     .onStatus(httpStatus -> httpStatus.value() == HttpStatus.NOT_FOUND.value(),
-                            cR -> getMessage(cR, "Что-то пошло не так не удалось получить отпуск за период"))
+                            cR -> getMessage(cR, "Что-то пошло не так не удалось сформировать платеж"))
                     .bodyToMono(PayDTO.class)
                     .doOnError(throwable -> log.error(throwable.getMessage()))
                     .block();
         } catch (RuntimeException ex) {
             log.error("/send",ex);
-            throw new ResourceNotFoundRunTime("Что-то пошло не так не удалось получить Календарь (api-pay) не доступен подождите или обратитесь к администратору " + ex.getMessage());
+            throw new ResourceNotFoundRunTime("(api-pay) не доступен подождите или обратитесь к администратору " + ex.getMessage());
         }
     }
 
-    public PayDTO getPay(Long id) throws ResourceNotFoundException {
-        String uri = "/" + id;
+    public PayDTO getPay(Long orderId) throws ResourceNotFoundException {
+
+        StringBuilder sb = new StringBuilder();
+        addTeg(sb,"orderId",orderId);
+        String uri = "/order" + sb;
         try {
             return webClient.get().uri(uri)
                     .retrieve()
                     .onStatus(httpStatus -> httpStatus.value() == HttpStatus.NOT_FOUND.value(),
-                            cR -> getMessage(cR, "Что-то пошло не так не удалось получить отпуск за период"))
+                            cR -> getMessage(cR, "Что-то пошло не так не удалось получить платеж"))
                     .bodyToMono(PayDTO.class)
-                    .doOnError(throwable -> log.error(throwable.getMessage()))
+                    .doOnError(throwable -> log.error(throwable.getMessage(),throwable))
                     .block();
         } catch (RuntimeException ex) {
 //            log.error(uri, ex);
-            throw new ResourceNotFoundException("Что-то пошло не так не удалось получить платеж (api-pay) не доступен подождите или обратитесь к администратору " + ex.getMessage());
+            throw new ResourceNotFoundException("(api-pay) не доступен подождите или обратитесь к администратору " + ex.getMessage());
         }
     }
 

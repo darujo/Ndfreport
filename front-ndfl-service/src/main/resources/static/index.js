@@ -2,6 +2,7 @@ angular.module('ndflService').controller('indexController', function ($rootScope
     const constPatchAuth = window.location.origin;
 
     $scope.loadFilter = null;
+
     $scope.tryToAuth = function () {
         $http.post(constPatchAuth + '/auth', $scope.user)
             .then(function successCallback(response) {
@@ -9,7 +10,7 @@ angular.module('ndflService').controller('indexController', function ($rootScope
                     $http.defaults.headers.common.Authorization = 'Bearer ' + response.data.token;
                     $localStorage.authUser = {username: $scope.user.username, token: response.data.token};
                     // init();
-
+                    $scope.getUser();
                     $scope.user = {
                         username: null,
                         password: null
@@ -33,6 +34,7 @@ angular.module('ndflService').controller('indexController', function ($rootScope
     }
 
     $scope.getUser = function () {
+        console.log("getUser");
         console.log($localStorage.authUser);
         if (typeof $localStorage.authUser !== "undefined") {
             let nikName = $localStorage.authUser.username;
@@ -76,11 +78,13 @@ angular.module('ndflService').controller('indexController', function ($rootScope
         $http.defaults.headers.common.Authorization = '';
     };
 
-    $scope.isUserLoggedIn = function () {
-        if ($localStorage.authUser) {
+    $scope.isUserLoggedIn = function (reg) {
+        if ($localStorage.authUser || (reg && (location.hash.substring(2) === "/user" || location.hash === "/user"))) {
             return true;
         } else {
-            $location.path('/').search({});
+            if((location.hash.substring(2) !== "/user" && location.hash !== "/user")) {
+                $location.path('/').search({});
+            }
             return false;
         }
     };
@@ -93,38 +97,6 @@ angular.module('ndflService').controller('indexController', function ($rootScope
         }
     };
 
-    $scope.addTelegram = function () {
-        console.log("getUser")
-        // document.getElementById("UserName").value = nikName;
-
-        $http.get(constPatchAuth + '/users/user/telegram/get')
-            .then(function successCallback(response) {
-                console.log(response)
-                $scope.CodeTelegram = response.data;
-
-
-                // document.getElementById("UserName").value = response.data.lastName + " " + response.data.firstName + " " + response.data.patronymic;
-            }, function errorCallback(response) {
-                console.log(response);
-            });
-    };
-
-    $scope.deleteTelegram = function () {
-        console.log("getUser")
-        // document.getElementById("UserName").value = nikName;
-
-        $http.get(constPatchAuth + '/users/user/telegram/delete/type')
-            .then(function successCallback(response) {
-                console.log(response)
-                $scope.getUser();
-                $scope.CodeTelegram = null;
-
-
-                // document.getElementById("UserName").value = response.data.lastName + " " + response.data.firstName + " " + response.data.patronymic;
-            }, function errorCallback(response) {
-                console.log(response);
-            });
-    };
 
     $location.checkAuthorized = function (response) {
         console.log("response.status");
@@ -247,5 +219,10 @@ angular.module('ndflService').controller('indexController', function ($rootScope
             }
         }
     }
+    $scope.registr = function (){
+        console.log("user reg")
+        $location.path('/user')
+    }
+    $scope.getUser();
     console.log("loan index.js end");
 })

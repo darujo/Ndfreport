@@ -6,12 +6,10 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.daru_jo.entity.Order;
 import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.helper.ExcelHelper;
 import ru.daru_jo.model.PercentModel;
 import ru.daru_jo.service.IncomeService;
-import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.PercentService;
 import ru.daru_jo.service.db.ValuteService;
 import ru.daru_jo.type.AssetType;
@@ -24,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DumpPercent {
     private PercentService percentService;
     private ValuteService valuteService;
-    private OrderAccountService orderAccountService;
 
     @Autowired
     public void setPercentService(PercentService percentService) {
@@ -38,7 +35,7 @@ public class DumpPercent {
 
     private final Sort sort = Sort.by("orderAccount", "type", "date", "code");
 
-    public void dump(Workbook wb, Sheet sheet, Order order, String year) {
+    public void dump(Workbook wb, Sheet sheet, List<OrderAccount> orderAccountList, String year) {
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
         cell.setCellValue(String.format("Раздел 3. Доходы по процентам за период  01/01/%s - 31/12/%s", year, year));
@@ -46,7 +43,7 @@ public class DumpPercent {
         sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 12));
 
         AtomicInteger rowNum = new AtomicInteger(3);
-        orderAccountService.findAll(order, year).forEach(orderAccount ->
+        orderAccountList.forEach(orderAccount ->
                 dump(wb, sheet, rowNum, orderAccount)
         );
     }
@@ -128,10 +125,5 @@ public class DumpPercent {
         rowNum++;
 
         return rowNum;
-    }
-
-    @Autowired
-    public void setOrderAccountService(OrderAccountService orderAccountService) {
-        this.orderAccountService = orderAccountService;
     }
 }

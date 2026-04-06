@@ -12,6 +12,15 @@ angular.module('ndflService').config(["$ocLazyLoadProvider", function ($ocLazyLo
         }, {
             name: 'pay', // module
             files: ['pay/pay.js?ver=' + ver]
+        }, {
+            name: 'user', // module
+            files: ['user/user.js?ver=' + ver]
+        }, {
+            name: 'password_change', // module
+            files: ['user/user_password.js?ver=' + ver]
+        }, {
+            name: 'order_add', // module
+            files: ['order/order_add.js?ver=' + ver]
         }
         ]
     });

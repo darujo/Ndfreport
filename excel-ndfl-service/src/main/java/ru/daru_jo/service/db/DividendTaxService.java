@@ -23,7 +23,7 @@ public class DividendTaxService {
 
     public List<DividendTax> findAll(OrderAccount orderAccount, String code, Timestamp date, Sort sort) {
         Specification<DividendTax> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", orderAccount);
+        specification = Specifications.eq(specification,"orderAccount", orderAccount);
         specification = Specifications.eq(specification,"code",code);
         specification = Specifications.eq(specification,"date",date);
         return dividendTaxRepository.findAll(specification,sort);
@@ -31,5 +31,9 @@ public class DividendTaxService {
 
     public void save(DividendTax coupon) {
         dividendTaxRepository.save(coupon);
+    }
+
+    public void delete(OrderAccount orderAccount){
+        dividendTaxRepository.deleteDividendTaxByOrderAccount(orderAccount);
     }
 }

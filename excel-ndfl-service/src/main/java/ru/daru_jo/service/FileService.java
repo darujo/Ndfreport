@@ -31,7 +31,13 @@ public class FileService {
 
     public List<File> saveFiles(Order order, List<MultipartFile> multipartFiles) {
         List<File> files = new ArrayList<>();
-
+        File directory = new File(pathSave + "/" + order.getId());
+        boolean created = directory.mkdir();
+        if (created) {
+            log.info("Директория успешно создана {}/{}", pathSave, order.getId());
+        } else {
+            log.info("Не удалось создать директорию{}/{}", pathSave, order.getId());
+        }
         AtomicInteger num = new AtomicInteger();
         if (multipartFiles != null) {
             multipartFiles.forEach(multipartFile -> {
@@ -54,7 +60,7 @@ public class FileService {
         return files;
     }
 
-    public void getOrderReport(Long orderId, DeferredResult<ResponseEntity<Resource>> deferredResult ){
-        scheduleService.getOrderReport(orderId, deferredResult);
+    public void getOrderReport(String username, List<Long> orderId, DeferredResult<ResponseEntity<Resource>> deferredResult ){
+        scheduleService.getOrderReport(username, orderId, deferredResult);
     }
 }

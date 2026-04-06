@@ -22,19 +22,23 @@ public class BondService {
 
     public List<Bond> findAll(OrderAccount orderAccount, String type, Sort sort) {
         Specification<Bond> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", orderAccount);
+        specification = Specifications.eq(specification,"orderAccount", orderAccount);
         specification = Specifications.eq(specification,"type",type);
         return bondRepository.findAll(specification,sort);
     }
 
     public List<Bond> findAll(OrderAccount orderAccount, List<String> types, Sort sort) {
         Specification<Bond> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", orderAccount);
+        specification = Specifications.eq(specification,"orderAccount", orderAccount);
         specification = Specifications.in(specification,"type",types);
         return bondRepository.findAll(specification,sort);
     }
 
     public void save(Bond bond) {
         bondRepository.save(bond);
+    }
+
+    public void delete(OrderAccount orderAccount){
+        bondRepository.deleteBondByOrderAccount(orderAccount);
     }
 }

@@ -4,12 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.daru_jo.entity.Order;
+import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.helper.ExcelHelper;
-import ru.daru_jo.service.export.DumpCoupon;
-import ru.daru_jo.service.export.DumpDeal;
-import ru.daru_jo.service.export.DumpDividend;
-import ru.daru_jo.service.export.DumpPercent;
+import ru.daru_jo.service.export.*;
 
 import java.util.*;
 
@@ -22,6 +19,7 @@ public class IncomeService {
     private DumpDeal dumpDeal;
     private DumpCoupon dumpCoupon;
     private DumpDividend dumpDividend;
+    private DumpExpenses dumpExpenses;
 
     @Autowired
     public void setDumpCoupon(DumpCoupon dumpCoupon) {
@@ -39,12 +37,14 @@ public class IncomeService {
     }
 
 
-    public void dump(String fileName, Order order, String year) {
+    public void dump(String fileName, List<OrderAccount> orderAccountList, String year) {
         Workbook wb = ExcelHelper.readWorkbookResource("otchet.xlsx");
-        dumpDeal.dump(wb, ExcelHelper.createNewList(wb, "Сделки2"), order, year);
-        dumpCoupon.dump(wb, ExcelHelper.createNewList(wb, "Купоны2"), order, year);
-        dumpDividend.dump(wb, ExcelHelper.createNewList(wb, "Дивиденды2"), order, year);
-        dumpPercent.dump(wb, ExcelHelper.createNewList(wb, "Проценты2"), order, year);
+        Sheet sheet = ExcelHelper.createNewList(wb, "Сделки2");
+        dumpCoupon.dump(wb, ExcelHelper.createNewList(wb, "Купоны2"), orderAccountList, year);
+        dumpDividend.dump(wb, ExcelHelper.createNewList(wb, "Дивиденды2"), orderAccountList, year);
+        dumpPercent.dump(wb, ExcelHelper.createNewList(wb, "Проценты2"), orderAccountList, year);
+        double amount = dumpExpenses.dump(wb, ExcelHelper.createNewList(wb, "Общие расходы2"), orderAccountList, year);
+        dumpDeal.dump(wb, sheet, orderAccountList, year, amount);
         ExcelHelper.writeWorkbook(wb, fileName);
 
     }
@@ -186,5 +186,10 @@ public class IncomeService {
     @Autowired
     public void setDumpPercent(DumpPercent dumpPercent) {
         this.dumpPercent = dumpPercent;
+    }
+
+    @Autowired
+    public void setDumpExpenses(DumpExpenses dumpExpenses) {
+        this.dumpExpenses = dumpExpenses;
     }
 }

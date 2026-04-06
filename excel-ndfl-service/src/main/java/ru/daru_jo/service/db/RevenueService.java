@@ -26,8 +26,10 @@ public class RevenueService {
 
     public List<Revenue> findAll(OrderAccount orderAccount){
         Specification<Revenue> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", orderAccount);
-        return revenueRepository.findAll(specification, Sort.by("order").and(Sort.by("category").and(Sort.by("companyName").and(Sort.by("timestamp")))));
+        specification = Specifications.eq(specification,"orderAccount", orderAccount);
+        return revenueRepository.findAll(specification, Sort.by("orderAccount").and(Sort.by("category").and(Sort.by("companyName").and(Sort.by("timestamp")))));
     }
-
+    public void delete(OrderAccount orderAccount){
+        revenueRepository.deleteRevenueByOrderAccount(orderAccount);
+    }
 }

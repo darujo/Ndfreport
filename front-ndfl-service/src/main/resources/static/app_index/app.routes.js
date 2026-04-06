@@ -20,6 +20,15 @@ angular.module('ndflService').config(function ($routeProvider) {
                 }]
             }
         })
+        .when('/order_add', {
+            templateUrl: 'order/order_add.html',
+            controller: 'orderAddController',
+            resolve: {
+                LazyLoadCtrl: ['$ocLazyLoad', function ($ocLazyLoad) {
+                    return $ocLazyLoad.load('order_add'); // Resolve promise and load before view
+                }]
+            }
+        })
         .when('/pay', {
             templateUrl: 'pay/pay.html',
             controller: 'payController',
@@ -29,7 +38,25 @@ angular.module('ndflService').config(function ($routeProvider) {
                 }]
             }
         })
+        .when('/user', {
+            templateUrl: 'user/user.html',
+            controller: 'userController',
+            resolve: {
+                LazyLoadCtrl: ['$ocLazyLoad', function ($ocLazyLoad) {
+                    return $ocLazyLoad.load('user'); // Resolve promise and load before view
+                }]
+            }
+        })
+        .when('/password_change', {
+            templateUrl: 'user/user_password.html',
+            controller: 'userController',
+            resolve: {
+                LazyLoadCtrl: ['$ocLazyLoad', function ($ocLazyLoad) {
+                    return $ocLazyLoad.load('password_change'); // Resolve promise and load before view
+                }]
+            }
+        })
         .otherwise({
             redirectTo: '/'
         });
-});
+})

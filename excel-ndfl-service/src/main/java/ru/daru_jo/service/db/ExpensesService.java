@@ -20,14 +20,18 @@ public class ExpensesService {
         this.expensesRepository = expensesRepository;
     }
 
-    public List<Expenses> findAll(OrderAccount orderAccount, String type, Sort sort) {
+    public List<Expenses> findAll(OrderAccount orderAccount, List<String> types, Sort sort) {
         Specification<Expenses> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", orderAccount);
-        specification = Specifications.eq(specification,"type",type);
+        specification = Specifications.eq(specification,"orderAccount", orderAccount);
+        specification = Specifications.eq(specification,"type",types);
         return expensesRepository.findAll(specification,sort);
     }
 
-    public void save(Expenses percent) {
-        expensesRepository.save(percent);
+    public void save(Expenses expenses) {
+        expensesRepository.save(expenses);
+    }
+
+    public void delete(OrderAccount orderAccount){
+        expensesRepository.deleteExpensesByOrderAccount(orderAccount);
     }
 }

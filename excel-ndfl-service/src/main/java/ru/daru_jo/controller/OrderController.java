@@ -9,16 +9,13 @@ import ru.daru_jo.dto.OrderDTO;
 import ru.daru_jo.dto.PayDTO;
 import ru.daru_jo.entity.Order;
 import ru.daru_jo.exceptions.ResourceNotFoundRunTime;
-import ru.daru_jo.integration.PayServiceIntegration;
 import ru.daru_jo.service.db.OrderService;
-import ru.daru_jo.exceptions.ResourceNotFoundException;
 
 
 @RestController()
 @RequestMapping("/v1/order")
 public class OrderController {
     private OrderService orderService;
-    private PayServiceIntegration payServiceIntegration;
 
     @Autowired
     public void setOrderService(OrderService orderService) {
@@ -34,28 +31,18 @@ public class OrderController {
 
     @DeleteMapping("/{id}")
     public void deleteOrder(@PathVariable long id) {
-        orderService.deleteOrder( id);
+        orderService.deleteOrder(id);
     }
 
     @GetMapping("")
-    public PagedModel<?> getOrderList(@RequestParam(required = false) String username,
+    public PagedModel<?> getOrderList(@RequestHeader(required = false) String username,
                                       PagedResourcesAssembler<OrderDTO> assembler) {
         return assembler.toModel(orderService.getOrderList(username).map(this::getOrderDto));
     }
 
-    public OrderDTO getOrderDto(Order order){
-        PayDTO payDTO= null;
-        try {
-            payDTO = payServiceIntegration.getPay(order.getId());
-        }
-        catch (ResourceNotFoundException ignore){
-
-        }
-        return OrderConvertor.getOrderDto(order, payDTO!= null && payDTO.getIsCompleted());
+    public OrderDTO getOrderDto(Order order) {
+        PayDTO payDTO = orderService.getPay(order);
+        return OrderConvertor.getOrderDto(order, payDTO != null && payDTO.getIsCompleted());
     }
 
-    @Autowired
-    public void setPayServiceIntegration(PayServiceIntegration payServiceIntegration) {
-        this.payServiceIntegration = payServiceIntegration;
-    }
 }

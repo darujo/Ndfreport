@@ -1,0 +1,42 @@
+<div id="UserList" class="head_text_elem">
+    <h1>Отправка уведомлений</h1>
+    <form ng-submit="sendMessage()">
+        <div class="horiz">
+            <button type="submit" class="head_button">Отправить</button>
+            <button type="button" class="head_button" ng-click="backUser()">Назад</button>
+        </div>
+        <div ng-if="sendMessageForAll" class="div_process">
+            <div class="div_percent" ng-style="getProcess()">
+                <p class="div_process_text">{{uploadProgress}}</p>
+            </div>
+        </div>
+        <div class="horiz">
+            <label for="file1">Выберите файл:</label>
+
+            <div class="block-list">
+                <input type="file" id="file1" class="file-input" accept=".csv" file-model="FormFile.files[0]"/>
+                <input type="file" id="file2" class="file-input" accept=".csv" file-model="FormFile.files[1]"
+                       ng-if="FormFile.files[0]"/>
+                <input type="file" id="file3" class="file-input" accept=".csv" file-model="FormFile.files[2]"
+                       ng-if="FormFile.files[1]"/>
+                <input type="file" id="file4" class="file-input" accept=".csv" file-model="FormFile.files[3]"
+                       ng-if="FormFile.files[2]"/>
+                <input type="file" id="file5" class="file-input" accept=".csv" file-model="FormFile.files[4]"
+                       ng-if="FormFile.files[3]"/>
+                <input type="file" id="file6" class="file-input" accept=".csv" file-model="FormFile.files[5]"
+                       ng-if="FormFile.files[4]"/>
+                <input type="file" id="file7" class="file-input" accept=".csv" file-model="FormFile.files[6]"
+                       ng-if="FormFile.files[5]"/>
+                <input type="file" id="file8" class="file-input" accept=".csv" file-model="FormFile.files[7]"
+                       ng-if="FormFile.files[6]"/>
+                <input type="file" id="file9" class="file-input" accept=".csv" file-model="FormFile.files[8]"
+                       ng-if="FormFile.files[7]"/>
+                <input type="file" id="file10" class="file-input" accept=".csv" file-model="FormFile.files[9]"
+                       ng-if="FormFile.files[8]"/>
+                <input type="file" id="file11" class="file-input" accept=".csv" file-model="FormFile.files[10]"
+                       ng-if="FormFile.files[9]"/>
+            </div>
+
+        </div>
+    </form>
+</div>

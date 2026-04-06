@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.daru_jo.entity.Dividend;
-import ru.daru_jo.entity.Order;
+
 import ru.daru_jo.entity.OrderAccount;
 import ru.daru_jo.helper.ExcelHelper;
 import ru.daru_jo.model.DividendModel;
@@ -17,12 +17,12 @@ import ru.daru_jo.model.ResultRow;
 import ru.daru_jo.service.IncomeService;
 import ru.daru_jo.service.db.DividendService;
 import ru.daru_jo.service.db.DividendTaxService;
-import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.ValuteService;
 import ru.daru_jo.type.ColorImp;
 
 import java.sql.Timestamp;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,7 +33,6 @@ public class DumpDividend {
     private DividendService dividendService;
     private DividendTaxService dividendTaxService;
     private ValuteService valuteService;
-    private OrderAccountService orderAccountService;
 
     @Autowired
     public void setDividendService(DividendService dividendService) {
@@ -50,18 +49,13 @@ public class DumpDividend {
         this.valuteService = valuteService;
     }
 
-    @Autowired
-    public void setOrderAccountService(OrderAccountService orderAccountService) {
-        this.orderAccountService = orderAccountService;
-    }
-
-    public void dump(Workbook wb, Sheet sheet, Order order, String year) {
+    public void dump(Workbook wb, Sheet sheet, List<OrderAccount> orderAccountList, String year) {
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
         cell.setCellValue(String.format("Раздел 2. Доходы по дивидендам за период 01/01/%s - 31/12/%s", year, year));
         cell.setCellStyle(IncomeService.getCellStyleColor(wb, ExcelHelper.getColor(ColorImp.HEAD), IncomeService.getFont(wb, IndexedColors.WHITE, true, null), HorizontalAlignment.CENTER, VerticalAlignment.CENTER, null));
         sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 11));
-        Map<String, Map<String, Map<Timestamp, Map<String, DividendModel>>>> accountCurrencyDateCodeDividendMap = addDividend(order, year);
+        Map<String, Map<String, Map<Timestamp, Map<String, DividendModel>>>> accountCurrencyDateCodeDividendMap = addDividend(orderAccountList);
         AtomicInteger rowNum = new AtomicInteger(1);
         accountCurrencyDateCodeDividendMap.keySet().forEach(account -> dumpAccount(wb, sheet, rowNum, account, accountCurrencyDateCodeDividendMap.get(account)));
     }
@@ -204,9 +198,9 @@ public class DumpDividend {
         return taxPay;
     }
 
-    private Map<String, Map<String, Map<Timestamp, Map<String, DividendModel>>>> addDividend(Order order, String year) {
+    private Map<String, Map<String, Map<Timestamp, Map<String, DividendModel>>>> addDividend(List<OrderAccount> orderAccountList) {
         Map<String, Map<String, Map<Timestamp, Map<String, DividendModel>>>> accountCurrencyCodeDividendMap = new LinkedHashMap<>();
-        orderAccountService.findAll(order, year).forEach(orderAccount ->
+        orderAccountList.forEach(orderAccount ->
                 dividendService.findAll(orderAccount, Sort.by("orderAccount", "date", "code")).forEach(dividend -> {
                     Map<String, DividendModel> codeDividendMap = accountCurrencyCodeDividendMap
                             .computeIfAbsent(orderAccount.getAccount(), s -> new LinkedHashMap<>())

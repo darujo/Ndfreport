@@ -22,7 +22,17 @@ spring:
 
   jackson:
     default-property-inclusion: non_absent
+  servlet:
+    multipart:
+      enabled: true
+      # Threshold after which the files are written to a disk.
+      file-size-threshold: 2KB
+        # Max file size.
+      max-file-size: 50MB
+        # Max Request Size
+      max-request-size: 1000MB
+
 
 file:
-  save-into: "c:\\11"
+  save-into: "c:\\11\\ndfl"
   save-report: "C:/java/NDFLBroker/report/ss"

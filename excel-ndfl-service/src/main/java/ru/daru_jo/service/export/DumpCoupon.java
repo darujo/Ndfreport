@@ -12,7 +12,6 @@ import ru.daru_jo.model.Deal;
 import ru.daru_jo.model.ExpenditureModel;
 import ru.daru_jo.model.RevenueModel;
 import ru.daru_jo.service.IncomeService;
-import ru.daru_jo.service.db.OrderAccountService;
 import ru.daru_jo.service.db.ValuteService;
 import ru.daru_jo.service.db.BondService;
 import ru.daru_jo.type.AssetType;
@@ -27,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DumpCoupon {
     private BondService bondService;
     private ValuteService valuteService;
-    private OrderAccountService orderAccountService;
+
 
     @Autowired
     public void setBondService(BondService bondService) {
@@ -39,14 +38,9 @@ public class DumpCoupon {
         this.valuteService = valuteService;
     }
 
-    @Autowired
-    public void setOrderAccountService(OrderAccountService orderAccountService) {
-        this.orderAccountService = orderAccountService;
-    }
-
     private final Sort sort = Sort.by("orderAccount", "type", "date", "code");
 
-    public void dump(Workbook wb, Sheet sheet, Order order, String year) {
+    public void dump(Workbook wb, Sheet sheet, List<OrderAccount> orderAccountList, String year) {
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
         cell.setCellValue(String.format("Раздел 1.2. Доходы по купонам за период 01/01/%s - 31/12/%s", year, year));
@@ -54,7 +48,7 @@ public class DumpCoupon {
         sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 12));
 
         AtomicInteger rowNum = new AtomicInteger(3);
-        orderAccountService.findAll(order, year).forEach(orderAccount -> {
+        orderAccountList.forEach(orderAccount -> {
             Row rowAccount = sheet.createRow(rowNum.getAndIncrement());
             Cell cellAccount = rowAccount.createCell(0);
             cellAccount.setCellValue(String.format("Купоны, полученные в Interactive Brokers %s", orderAccount.getAccount()));
@@ -135,8 +129,8 @@ public class DumpCoupon {
         return rowNum;
     }
 
-    public void addCoupon(Order order, String year, Map<String, Map<String, Map<String, Deal>>> mapDeal) {
-        orderAccountService.findAll(order, year).forEach(orderAccount -> {
+    public void addCoupon(List<OrderAccount> orderAccountList, Map<String, Map<String, Map<String, Deal>>> mapDeal) {
+        orderAccountList.forEach(orderAccount -> {
             Map<String, Deal> dealList = mapDeal
                     .computeIfAbsent(orderAccount.getAccount(), s -> new LinkedHashMap<>())
                     .computeIfAbsent(AssetType.Bonds.getType().toString(), s -> new LinkedHashMap<>());

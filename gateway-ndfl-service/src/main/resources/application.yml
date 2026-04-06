@@ -48,15 +48,19 @@ spring:
             #                - StripPrefix=1
             #                            - PrefixPath=system/
             - id: user-admin-service
-              uri: "http://localhost:8183"
+              uri: "http://localhost:8283"
               predicates:
-                - Path=/admin/users/**,/admin/roles/**,/admin/projects/**
+                - Path=/users/**
               filters:
                 - StripPrefix=0
                 - PrefixPath=/app-auth/
-                - JwtAdminFilter
+            - id: udaru
+              uri: "http://localhost:8080"
+              predicates:
+                - Host=**.darujo.ru:*
+
             - id: auth-service
-              uri: "http://localhost:8183"
+              uri: "http://localhost:8283"
               predicates:
                 - Path=/auth
               filters:
@@ -82,10 +86,12 @@ spring:
             - id: robo-service
               uri: "http://localhost:8282"
               predicates:
-                - Path=/robopay/pay
+                - Path=/robopay/pay*
+                - RemoteAddr=185.59.216.65,185.59.217.65
               filters:
                 - StripPrefix=1
                 - PrefixPath=/app-robo/v1/pay
+
 #                - JwtAuthFilter
 
             - id: front-service

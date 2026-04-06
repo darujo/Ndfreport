@@ -27,6 +27,9 @@ public class Order {
     @Column(name = "years")
     private List<String> yearList;
 
+    @Column(name = "count")
+    private Integer count;
+
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
     private List<OrderAccount> orderAccountList;
 

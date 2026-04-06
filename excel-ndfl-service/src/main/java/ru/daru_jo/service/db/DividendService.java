@@ -22,11 +22,15 @@ public class DividendService {
 
     public List<Dividend> findAll(OrderAccount orderAccount, Sort sort) {
         Specification<Dividend> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", orderAccount);
+        specification = Specifications.eq(specification,"orderAccount", orderAccount);
         return dividendRepository.findAll(specification,sort);
     }
 
     public void save(Dividend coupon) {
         dividendRepository.save(coupon);
+    }
+
+    public void delete(OrderAccount orderAccount){
+        dividendRepository.deleteDividendByOrderAccount(orderAccount);
     }
 }

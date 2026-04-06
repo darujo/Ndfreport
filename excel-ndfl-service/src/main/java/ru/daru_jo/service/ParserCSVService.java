@@ -62,22 +62,15 @@ public class ParserCSVService {
     }
 
     @Transactional
-    public void readDataLineByLine(OrderAccount orderAccount, Reader reader) {
-
+    public int readDataLineByLine(OrderAccount orderAccount, Reader reader) {
+       int count = 0;
         try {
-
-            // Create an object of filereader
-            // class with CSV file as a parameter.
-
-
-            // create csvReader object passing
-            // file reader as a parameter
             CSVReader csvReader = new CSVReader(reader);
             String[] nextRecord;
             // we are going to read data line by line
             while ((nextRecord = csvReader.readNext()) != null) {
                 try {
-                    parserLine(orderAccount, nextRecord);
+                    count = count + parserLine(orderAccount, nextRecord);
                 } catch (Exception e) {
                     orderAccount.setError(e.getMessage());
                     log.error(Arrays.toString(nextRecord));
@@ -89,17 +82,19 @@ public class ParserCSVService {
             orderAccount.setError(e.getMessage());
             log.error(e.getMessage(), e);
         }
+        return count;
     }
 
     boolean loadDividend = false;
 
-    private void parserLine(OrderAccount orderAccount, String[] nextRecord) {
+    private int parserLine(OrderAccount orderAccount, String[] nextRecord) {
         if (nextRecord.length > 3) {
             if (nextRecord[0].equals("Сделки") || nextRecord[0].equals("Trades")) {
                 if (nextRecord[2].equals("Order")) {
                     saveRevenue(orderAccount, nextRecord);
                 } else if (nextRecord[2].equals("ClosedLot")) {
                     saveExpenditure(orderAccount, nextRecord);
+                    return 1;
                 }
             } else if (nextRecord[0].equals("Statement")
                     && nextRecord[1].equals("Data")
@@ -164,6 +159,7 @@ public class ParserCSVService {
                 saveTransactionFees(orderAccount, nextRecord);
             }
         }
+        return 0;
     }
 
     /**
@@ -193,8 +189,8 @@ public class ParserCSVService {
      */
 
     private void saveBrokerInterestPaid(OrderAccount orderAccount, String[] record) {
-        if(!record[2].startsWith("Total")
-        && !record[1].equals("Header")) {
+        if (!record[2].startsWith("Total")
+                && !record[1].equals("Header")) {
             Expenses expenses = new Expenses(
                     record[4],
                     getDateForDate(record[3]),
@@ -214,9 +210,9 @@ public class ParserCSVService {
      */
 
     private void saveFees(OrderAccount orderAccount, String[] record) {
-        if(!record[6].equals("Amount")
-        && !record[2].startsWith("Total")
-        && !record[1].startsWith("Notes")) {
+        if (!record[6].equals("Amount")
+                && !record[2].startsWith("Total")
+                && !record[1].startsWith("Notes")) {
             double amount = Double.parseDouble(record[6]);
             if (amount > 0) {
                 Percent percent = new Percent(
@@ -248,8 +244,8 @@ public class ParserCSVService {
      */
 
     private void saveInterest(OrderAccount orderAccount, String[] record) {
-        if(!record[2].startsWith("Total")
-        && !record[1].startsWith("Header")) {
+        if (!record[2].startsWith("Total")
+                && !record[1].startsWith("Header")) {
             Percent percent = new Percent(
                     null,
                     record[4],
@@ -313,10 +309,10 @@ public class ParserCSVService {
     }
 
     /**
-     * @param orderAccount  заказ
-     * @param record массив
-     *               Dividends,Header,Currency,Date,Description,Amount
-     *               0        ,1     ,2       ,3   ,4          ,5
+     * @param orderAccount заказ
+     * @param record       массив
+     *                     Dividends,Header,Currency,Date,Description,Amount
+     *                     0        ,1     ,2       ,3   ,4          ,5
      */
     private void saveDividend(OrderAccount orderAccount, String[] record) {
         Dividend dividend = new Dividend(
@@ -331,10 +327,10 @@ public class ParserCSVService {
     }
 
     /**
-     * @param orderAccount  заказ
-     * @param record массив
-     *               Withholding Tax,Header,Currency,Date,Description,Amount,Code
-     *               0              ,1     ,2       ,3   ,4          ,5     ,6
+     * @param orderAccount заказ
+     * @param record       массив
+     *                     Withholding Tax,Header,Currency,Date,Description,Amount,Code
+     *                     0              ,1     ,2       ,3   ,4          ,5     ,6
      */
     private void saveDividendTax(OrderAccount orderAccount, String[] record) {
         DividendTax dividendTax = new DividendTax(
@@ -363,11 +359,11 @@ public class ParserCSVService {
     }
 
     /**
-     * @param orderAccount  заказ
-     * @param record массив
-     *               Bond Interest Received          ,Header,Currency,Date,Description,Amount,Code
-     *               Проценты по облигациям: получено,Header,Валюта  ,Дата,Описание   ,Сумма ,Код
-     *               0                               ,1     ,2       ,3   ,4          ,5     ,6
+     * @param orderAccount заказ
+     * @param record       массив
+     *                     Bond Interest Received          ,Header,Currency,Date,Description,Amount,Code
+     *                     Проценты по облигациям: получено,Header,Валюта  ,Дата,Описание   ,Сумма ,Код
+     *                     0                               ,1     ,2       ,3   ,4          ,5     ,6
      */
 
     private void saveCoupon(OrderAccount orderAccount, String[] record) {
@@ -428,10 +424,10 @@ public class ParserCSVService {
 
     /**
      *
-     * @param orderAccount  Заказ
-     * @param record Массив:
-     *               Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Exchange,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code,
-     *               0,     1,     2,                3,             4,       5,     6,        7,       8,       9,       10,      11,      12,            13,          14,     15,
+     * @param orderAccount Заказ
+     * @param record       Массив:
+     *                     Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Exchange,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code,
+     *                     0,     1,     2,                3,             4,       5,     6,        7,       8,       9,       10,      11,      12,            13,          14,     15,
      *
      */
     private void saveRevenue(OrderAccount orderAccount, String[] record) {
@@ -463,10 +459,10 @@ public class ParserCSVService {
 
     /**
      *
-     * @param orderAccount  Заказ
-     * @param record Массив:
-     *               Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Exchange,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code,
-     *               0,     1,     2,                3,             4,       5,     6,        7,       8,       9,       10,      11,      12,            13,          14,     15,
+     * @param orderAccount Заказ
+     * @param record       Массив:
+     *                     Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Exchange,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code,
+     *                     0,     1,     2,                3,             4,       5,     6,        7,       8,       9,       10,      11,      12,            13,          14,     15,
      *
      */
     private void saveExpenditure(OrderAccount orderAccount, String[] record) {

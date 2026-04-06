@@ -22,12 +22,16 @@ public class PercentService {
 
     public List<Percent> findAll(OrderAccount orderAccount, String type, Sort sort) {
         Specification<Percent> specification = Specification.unrestricted();
-        specification = Specifications.eq(specification,"order", orderAccount);
+        specification = Specifications.eq(specification,"orderAccount", orderAccount);
         specification = Specifications.eq(specification,"type",type);
         return percentRepository.findAll(specification,sort);
     }
 
     public void save(Percent percent) {
         percentRepository.save(percent);
+    }
+
+    public void delete(OrderAccount orderAccount){
+        percentRepository.deletePercentByOrderAccount(orderAccount);
     }
 }

@@ -1,0 +1,59 @@
+<div id="UserList" class="head_text_elem">
+    <div id="FormEdit" class="div_form container_filter">
+
+        <form novalidate ng-submit="saveUser()">
+            <div class="horiz">
+                <label for="NikName" class="form_label">Логин:</label>
+                <input class="vvod80mar10" type="text" id="NikName" step="any"
+                       ng-model="User.nikName"/>
+                <br>
+            </div>
+            <div class="horiz">
+                <label for="TextPassword" class="form_label">Пароль текст:</label>
+                <input class="vvod40mar10" type="text" id="TextPassword"
+                       step="any"
+                       ng-model="User.textPassword"/>
+                <button class="head_button" type="button" ng-click="genHash()" id="GenHash">Сгенерить хаш</button>
+                <br>
+            </div>
+            <div class="horiz">
+                <label for="UserPassword" class="form_label">Пароль Hash bcrypt:</label>
+                <input class="vvod80mar10" type="text" id="UserPassword"
+                       step="any"
+                       ng-model="User.userPassword"/>
+                <br>
+            </div>
+            <div class="horiz">
+                <label for="LastName" class="form_label">Фамилия:</label>
+                <input class="vvod80mar10" type="text" id="LastName" step="any"
+                       ng-model="User.lastName"/>
+                <br>
+            </div>
+            <div class="horiz">
+                <label for="CurrentUser" class="form_label">Сменить пароль при входе</label>
+                <input class="vvod20" type="checkbox"
+                       id="CurrentUser"
+                       ng-model="User.passwordChange"/>
+                <label for="BlockUser" class="form_label">Заблокирован</label>
+                <input class="vvod20" type="checkbox"
+                       id="BlockUser"
+                       ng-model="User.block"/>
+            </div>
+            <div class="horiz">
+                <label for="FirstName" class="form_label">Имя:</label>
+                <input class="vvod80mar10" type="text" id="FirstName" step="any"
+                       ng-model="User.firstName"/>
+                <br>
+            </div>
+            <div class="horiz">
+                <label for="Patronymic" class="form_label">Отчество:</label>
+                <input class="vvod80mar10" type="text" id="Patronymic" step="any"
+                       ng-model="User.patronymic"/>
+                <br>
+            </div>
+            <button type="submit" class="button" id="ButtonSaveDown">Сохранить</button>
+            <button type="button" ng-click="cancel()" class="button">Вернуться к списку</button>
+
+        </form>
+    </div>
+</div>

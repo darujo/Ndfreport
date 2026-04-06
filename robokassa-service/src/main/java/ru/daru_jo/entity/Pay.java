@@ -31,4 +31,26 @@ public class Pay {
     private boolean isTest;
     @Column(name = "is_completed")
     private boolean isCompleted;
+
+    public Pay(Long id, String magCode, Long orderId, Double amount, String description, String hash, String email, boolean isTest, boolean isCompleted) {
+        this.id = id;
+        this.magCode = magCode;
+        this.orderId = orderId;
+        this.amount = amount;
+        this.description = description;
+        this.hash = hash;
+        this.email = email;
+        this.isTest = isTest;
+        this.isCompleted = isCompleted;
+    }
+
+    @Column(name = "fee")
+    private Double fee;
+
+    @Column(name = "hash_ok")
+    private String hashOk;
+    @Column(name = "payment_method")
+    private String paymentMethod;
+    @Column(name = "inc_curr_label")
+    private String incCurrLabel;
 }

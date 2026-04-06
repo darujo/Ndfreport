@@ -34,8 +34,9 @@ angular.module('ndflService').controller('orderListController', function ($scope
                 console.log(response);
                 console.log("response,data :");
                 console.log(response.data);
-                $scope.OrderList = response.data._embedded.orderDTOList;
                 $scope.load = false;
+                $scope.OrderList = response.data._embedded.orderDTOList;
+
             }, function errorCallback(response) {
                 $scope.load = false;
                 console.log(response)
@@ -54,12 +55,93 @@ angular.module('ndflService').controller('orderListController', function ($scope
 
     $scope.createOrder = function () {
         console.log("createOrder");
-        $location.path('/orderEdit').search({orderId: null});
+        $location.path('/order_add').search({orderId: null});
     };
 
     $scope.payOrder = function (orderId) {
         console.log("pay");
         $location.path('/pay').search({orderId: orderId});
+    };
+    $scope.getOrderDoc = function (orderId) {
+        console.log("getOrderDoc");
+        window.location =constPatchOrder +'/document?orderId=' +  orderId;
+    };
+
+    $scope.getOrderDocAll = function () {
+        console.log("getOrderDoc");
+        window.location =constPatchOrder +'/document';
+    };
+    $scope.getOrderDoc777 = function () {
+        $http.get(constPatchOrder + "/document"
+            , {
+                responseType: 'arraybuffer',
+                params: {
+                    //Required params
+                },
+            }).then(function (response) {
+
+                console.log(response.headers('content-disposition'))
+
+                let downloadLink = document.createElement("a");
+
+            document.body.appendChild(downloadLink);
+            downloadLink.style = "display: none";
+            console.log(response)
+            let fName = "response.zip";
+            const contentDisposition = response.headers('Content-Disposition');
+            if (contentDisposition) {
+                const fileNameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = fileNameRegex.exec(contentDisposition);
+                if (matches != null && matches[1]) {
+                    fName = matches[1].replace(/['"]/g, '');
+                }
+            }
+            let file = new Blob([response.data], {type: 'application/*'});
+//Blob, client side object created to with holding browser specific download popup, on the URL created with the help of window obj.
+
+            downloadLink.href = (window.URL || window.webkitURL).createObjectURL(file);
+            downloadLink.download = fName;
+            downloadLink.click();
+            return response;
+        });
+    }
+    $scope.getOrderDoc7778 = function () {
+        console.log("getOrderDoc");
+        $http({
+            url: constPatchOrder + "/document",
+            method: "get",
+            // params: {
+            //     orderId: orderId
+            // },
+            transformResponse: angular.identity,
+            responseType: 'blob'
+
+
+        }).then(function (response) {
+            console.log("response :");
+            console.log(response);
+            let filename = "1.zip"
+            let dataType = "application/octet-stream";
+            console.log(dataType)
+            let binaryData = [];
+            binaryData.push(response);
+            let downloadLink = document.createElement('a');
+            downloadLink.href = window.URL.createObjectURL(new Blob(binaryData, { type: dataType }));
+            if (filename) {
+                downloadLink.setAttribute('download', filename);
+            }
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            // $scope.OrderList = response.data._embedded.orderDTOList;
+            // $scope.load = false;
+        }, function errorCallback(response) {
+            // $scope.load = false;
+            console.log(response)
+            if ($location.checkAuthorized(response)) {
+                //     alert(response.data.message);
+            }
+
+        });
     };
 
     $scope.deleteOrder = function (orderId) {

@@ -22,6 +22,7 @@
 <!--            </form>-->
 <!--        </details>-->
         <button class="head_button" ng-click="createOrder()">Создать новый заказ</button>
+        <button class="head_button" ng-click="getOrderDoc777()">Создать отчет по оплаченным заказам</button>
 
     </div>
 
@@ -43,7 +44,8 @@
             <td>{{order.yearList}}</td>
             <td>{{order.status}}</td>
             <td>
-                <button ng-click="payOrder(order.id)">Оплатить</button>
+                <button ng-if="!order.pay" ng-click="payOrder(order.id)">Оплатить</button>
+                <button ng-if="order.pay" ng-click="getOrderDoc(order.id)">Получить отчет</button>
             </td>
             <td>
                 <button ng-click="deleteOrder(Order.id)">Удалить</button>

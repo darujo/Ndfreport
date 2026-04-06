@@ -44,31 +44,21 @@ public class PayController {
         return PayConverter.getPayDto(payService.getPay(orderId));
     }
 
-    @PostMapping("/pay")
-    public String getListPay(@RequestPart(required = false) String OutSum,
-                             @RequestPart(required = false) String InvId,
-                             @RequestPart(required = false) String Fee,
-                             @RequestPart(required = false) String EMail,
-                             @RequestPart(required = false) String SignatureValue,
-                             @RequestPart(required = false) String PaymentMethod,
-                             @RequestPart(required = false) String IncCurrLabel
+    @GetMapping("/pay")
+    public String getListPay3(@RequestParam(required = false, name = "OutSum") String outSum,
+                              @RequestParam(required = false, name = "InvId") String invId,
+                              @RequestParam(required = false, name = "Fee") String fee,
+                              @RequestParam(required = false, name = "EMail") String eMail,
+                              @RequestParam(required = false, name = "SignatureValue") String signatureValue,
+                              @RequestParam(required = false, name = "PaymentMethod") String paymentMethod,
+                              @RequestParam(required = false, name = "IncCurrLabel") String incCurrLabel
 
 
     ) {
-        log.info(OutSum);
-        log.info(InvId);
-        log.info(Fee);
-        log.info(EMail);
-        log.info(SignatureValue);
-        log.info(PaymentMethod);
-        log.info(IncCurrLabel);
-        return "OK" + InvId;
+        if (payService.payOk(outSum, invId, fee, eMail, signatureValue, paymentMethod, incCurrLabel)) {
+            return "OK" + invId;
+        } else {
+            return "SignatureValue not Correct";
+        }
     }
-
-    @PostMapping("/pay2")
-    public String getListPay(@RequestBody String text) {
-        log.info(text);
-        return "ok101";
-    }
-
 }

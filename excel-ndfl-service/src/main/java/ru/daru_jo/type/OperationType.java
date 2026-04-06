@@ -15,6 +15,7 @@ public enum OperationType {
     BOND_CLOSED_LOT("Приобретение позиции"),
     INTEREST("Проценты"),
     INTEREST_FEES("Проценты комиссии с +"),
+    EXPENSES("Общие расходы"),
     EXPENSES_FEES("Общие расходы комиссия с -"),
     EXPENSES_INTEREST_PAID("Ставка брокера: уплачено"),
     EXPENSES_TRANSACTION_FEES("Комиссия за перевод")
