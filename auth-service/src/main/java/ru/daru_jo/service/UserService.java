@@ -262,6 +262,9 @@ public class UserService {
     }
 
     public void sendCode(User user) {
+        if (user.getCodeEmail().isEmpty()){
+            throw new ResourceNotFoundRunTime("Почта уже подтверждена.");
+        }
         defaultEmailService.sendSimpleEmail(user.getNewEmail(), "Подтверждение почты", "Для подтверждения почты перейдите по " + UrlService.getUrlNewUser(user.getNikName(), getHash(user)));
     }
 }
