@@ -73,10 +73,15 @@
                                 <button id="navLoginSubmit" class="head_button"
                                         style="margin-left: 10px;" type="submit">Войти
                                 </button>
-                                <button id="navReg" class="head_button" ng-click="registr()"
+                                <button id="navReg" class="head_button" ng-click="registration()"
                                         style="margin-left: 10px;" type="button">Регистрация
                                 </button>
-
+                                <button type="button" class="head_button" ng-click="request_pass()"
+                                        id="ButtonRecoveryPassword">Восстановить пароль
+                                </button>
+                                <button type="button" class="head_button" ng-click="send_code()"
+                                        id="ButtonSendCode">Отправить код повторно
+                                </button>
                             </div>
                         </div>
                     </form>

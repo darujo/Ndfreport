@@ -38,18 +38,25 @@ public class AuthService implements UserDetailsService {
     @Override
     public @NonNull UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         User user = userService.loadUserByNikName(username);
+        return new org.springframework.security.core.userdetails.User(user.getNikName(), user.getPassword(),
+                mapGrandAuthority()
+        );// нужно для спринга
+    }
+
+    public void checkUser(@NonNull String username) throws UsernameNotFoundException {
+        User user = userService.loadUserByNikName(username);
 
         if (user.isBlock()) {
             throw new ResourceNotFoundRunTime("Пользователь заблокирован");
         }
 
-        if (!user.getRecovery() && user.getCodeEmail().isEmpty() ) {
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
             throw new ResourceNotFoundRunTime("Подтвердите почту");
         }
+//        if (!user.getRecovery() && user.getCodeEmail().isEmpty() ) {
+//            throw new ResourceNotFoundRunTime("Подтвердите почту");
+//        }
 
-        return new org.springframework.security.core.userdetails.User(user.getNikName(), user.getPassword(),
-                mapGrandAuthority()
-        );// нужно для спринга
     }
 
     private Collection<? extends GrantedAuthority> mapGrandAuthority() {
@@ -84,9 +91,9 @@ public class AuthService implements UserDetailsService {
 
     @Transactional
     public JwtResponse restorePassword(String nikName, String code) {
-        if(userService.restorePassword(nikName,code)){
+        if (userService.restorePassword(nikName, code)) {
             return new JwtResponse(newToken(nikName));
         }
-        throw  new ResourceNotFoundRunTime("Ссылка не просрочена");
+        throw new ResourceNotFoundRunTime("Ссылка просрочена");
     }
 }

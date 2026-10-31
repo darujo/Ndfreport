@@ -45,16 +45,17 @@
         console.log($scope.User);
         if (!sendSave) {
             sendSave = true;
-            $http.post(constPatchUser + "/users/user/edit", $scope.User)
+            $http.post(constPatchUser + "/users/user/create", $scope.User)
                 .then(function (response) {
                     console.log("Save response")
                     console.log(response);
                     sendSave = false;
-                    $location.path('/')
+                    $location.openPath('/')
+                    alert("Подтвердите почту")
                 }, function errorCallback(response) {
                     sendSave = false;
                     console.log(response.data);
-                    if ($location.checkAuthorized(response)) {
+                    if ($location.checkAuthorized(response,true)) {
 
                         alert(response.data.message);
                     }

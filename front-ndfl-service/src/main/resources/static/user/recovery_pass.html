@@ -1,0 +1,24 @@
+<div id="FormEdit" class="div_form container_filter">
+
+    <form novalidate ng-submit="recoveryPass()">
+        <div class="horiz">
+            <label class="form_label" for="textPasswordNew">Новый пароль:</label><input class="vvod40mar10"
+                                                                                        type="password"
+                                                                                        id="textPasswordNew"
+                                                                                        step="any"
+                                                                                        ng-model="User.passwordNew"/>
+            <br>
+        </div>
+        <div class="horiz">
+            <label class="form_label" for="textPasswordNew2">Новый пароль еще раз:</label><input class="vvod40mar10"
+                                                                                                 type="password"
+                                                                                                 id="textPasswordNew2"
+                                                                                                 step="any"
+                                                                                                 ng-model="User.passwordNew2"/>
+            <br>
+        </div>
+        <button type="submit" class="button" id="ButtonSaveDown">Сохранить</button>
+        <button type="button" ng-click="backButton()" class="button">Вернуться</button>
+
+    </form>
+</div>

@@ -2,37 +2,51 @@ angular.module('ndflService').controller('indexController', function ($rootScope
     const constPatchAuth = window.location.origin;
 
     $scope.loadFilter = null;
-
+    const techUrl = "/sys/"
+    let myHash;
+    let myPath = undefined;
     $scope.tryToAuth = function () {
         $http.post(constPatchAuth + '/auth', $scope.user)
             .then(function successCallback(response) {
                 if (response.data.token) {
-                    $http.defaults.headers.common.Authorization = 'Bearer ' + response.data.token;
-                    $localStorage.authUser = {username: $scope.user.username, token: response.data.token};
-                    // init();
-                    $scope.getUser();
+                    $location.setToken($scope.user.username, response.data.token)
+
                     $scope.user = {
                         username: null,
                         password: null
                     };
-                    // $location.path('/').search({});
-                    $location.path(myHash).search(myFilter);
+
+                    console.log("-----1----", myHash)
+                    $location.openPath(myHash, myFilter);
                     document.getElementById("DetailPrim").open = true;
                 }
             }, function errorCallback(response) {
                 console.log(response);
-                alert("Не удалось авторизоваться")
+                if(response.data.message) {
+                    alert(response.data.message)
+                }
+                else {
+                    alert("Не удается авторизоваться!!!")
+                }
             });
     };
+
     $location.backPage = function () {
         $scope.getUser();
         if (myHash === "userPassword".toLowerCase()) {
+            console.log("-----2----")
             $location.path("").search({});
         } else {
-            $location.path(myHash).search(myFilter);
+            console.log("-----3----", myHash)
+            $location.openPath(myHash, myFilter);
         }
     }
 
+    $location.setToken = function (username, token) {
+        $http.defaults.headers.common.Authorization = 'Bearer ' + token;
+        $localStorage.authUser = {username: username, token: token};
+        init();
+    }
     $scope.getUser = function () {
         console.log("getUser");
         console.log($localStorage.authUser);
@@ -46,8 +60,9 @@ angular.module('ndflService').controller('indexController', function ($rootScope
                     console.log(response)
                     $scope.UserLogin = response.data;
                     $location.UserLogin = $scope.UserLogin;
-                    if ($scope.UserLogin.passwordChange) {
-                        $location.path('/userPassword'.toLowerCase()).search({});
+                    if ($scope.UserLogin.passwordChange && myPath !== undefined && !myPath.startsWith("/recovery_pass")) {
+                        console.log("-----4----")
+                        $location.openPath('/userPassword'.toLowerCase());
 
                     }
 
@@ -79,14 +94,27 @@ angular.module('ndflService').controller('indexController', function ($rootScope
     };
 
     $scope.isUserLoggedIn = function (reg) {
-        if ($localStorage.authUser || (reg && (location.hash.substring(2) === "/user" || location.hash === "/user"))) {
+        if ($localStorage.authUser || (reg && (location.hash.startsWith(techUrl, 2) || location.hash === techUrl))) {
             return true;
         } else {
-            if((location.hash.substring(2) !== "/user" && location.hash !== "/user")) {
-                $location.path('/').search({});
+            if (location.hash.substring(2) !== "/" && location.hash !== "/") {
+                if (location.hash.startsWith(myPath, 2)) {
+                    myPath = undefined;
+                } else if (myPath !== undefined && (!myPath.startsWith(techUrl) && myPath !== techUrl)) {
+                    console.log("-----5---- 111")
+                    $location.openPath('/');
+                }
+                if (myPath === undefined
+                    && (!location.hash.startsWith(techUrl, 2) && location.hash !== techUrl)
+                ) {
+                    console.log("-----5----222")
+                    $location.openPath('/');
+                }
             }
             return false;
         }
+
+
     };
 
     $scope.isUserLoggedInAndPasOk = function () {
@@ -98,11 +126,16 @@ angular.module('ndflService').controller('indexController', function ($rootScope
     };
 
 
-    $location.checkAuthorized = function (response) {
+    $location.checkAuthorized = function (response, check404) {
         console.log("response.status");
         console.log(response.status);
         if (parseInt(response.status) === 500) {
             alert("Произошла ошибка. Обратитесь к администратору. " + response.data.message);
+            return false;
+        } else if (parseInt(response.status) === 404) {
+            if (check404 && response.data.message) {
+                alert(response.data.message);
+            }
             return false;
         } else if (parseInt(response.status) === 403) {
             alert("Нет прав: " + response.data);
@@ -115,8 +148,34 @@ angular.module('ndflService').controller('indexController', function ($rootScope
         return true;
 
     }
-    
-    let myHash;
+
+    $location.openPath = function (path, param) {
+        console.log("установим страницу", path, myPath, location.hash)
+        console.log(path)
+        //myPath = path;
+        if (path !== undefined && path !== "/") {
+            myPath = path;
+        } else {
+            if (location.hash !== "/" && location.hash !== "#!/") {
+                myPath = location.hash;
+                if (myPath.startsWith("#/")) {
+                    myPath = myPath.substring(2);
+                }
+                let filter = {}
+                $location.parserFilter(filter)
+                console.log("Получаем адрес")
+                console.log(myHash)
+                console.log(myFilter)
+            }
+        }
+        if (param) {
+            $location.path(path).search(param);
+        } else {
+            $location.path(path).search({});
+        }
+
+    }
+
     let myFilter = {};
     $location.parserFilter = function (filter) {
         console.log("parserFilter");
@@ -124,7 +183,8 @@ angular.module('ndflService').controller('indexController', function ($rootScope
         console.log(location.href);
         let strPars;
         console.log(location.href.lastIndexOf("#!"))
-        if (location.href.lastIndexOf("#!") > location.href.indexOf("?")) {
+        console.log(location.href.indexOf("?"))
+        if (location.href.indexOf("?") > 0 && location.href.lastIndexOf("#!") > location.href.indexOf("?")) {
             strPars = location.href.substring(location.href.lastIndexOf("#!"));
             console.log(strPars)
             window.open(location.origin + "/" + strPars, "_self");
@@ -147,6 +207,9 @@ angular.module('ndflService').controller('indexController', function ($rootScope
                     console.log(key);
                     console.log(value);
                     filter[key] = parseInt(value);
+                    if (isNaN(filter[key])) {
+                        filter[key] = value;
+                    }
                 } else if (key.toLowerCase().indexOf("date") !== -1) {
                     console.log(key);
 
@@ -162,6 +225,7 @@ angular.module('ndflService').controller('indexController', function ($rootScope
                     || key.indexOf("ziSplit") !== -1
                     || key.indexOf("hideNotTime") !== -1
                     || key.indexOf("avail") !== -1
+                    || key.indexOf("amountRate") !== -1
 
                 ) {
                     console.log(key);
@@ -219,10 +283,27 @@ angular.module('ndflService').controller('indexController', function ($rootScope
             }
         }
     }
-    $scope.registr = function (){
+    $scope.registration = function (){
         console.log("user reg")
-        $location.path('/user')
+        $location.openPath('/sys/registration')
+        $scope.UserRegistr = true;
     }
-    $scope.getUser();
+
+    let init = function () {
+        $scope.getUser();
+
+    }
+    if ($scope.isUserLoggedIn) {
+        init();
+    }
+
+    $scope.request_pass = function () {
+        $location.openPath('/sys/request_pass')
+    }
+
+    $scope.send_code = function () {
+        $location.openPath('/sys/sendCode')
+    }
+
     console.log("loan index.js end");
 })

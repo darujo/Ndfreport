@@ -111,7 +111,7 @@ public class UserService {
         }
         user = userRepository.save(user);
         if(newEmail) {
-            defaultEmailService.sendSimpleEmail(user.getNewEmail(), "Подтверждение почты", "Для подтверждения почты перейдите по ссылке" + UrlService.getUrlNewUser(user.getNikName(), getHash(user)));
+            sendCode(user);
         }
         return user;
     }
@@ -120,7 +120,6 @@ public class UserService {
         int code = (int) ((99999999 * Math.random()));
         user.setCodeEmail(Integer.toString(code));
         user.setSendCode(new Timestamp(System.currentTimeMillis()));
-        user.setEmail(user.getNewEmail());
         user.setRecovery(false);
     }
 
@@ -178,12 +177,7 @@ public class UserService {
     }
 
     @Transactional
-    public boolean changePassword(String username, String passwordOld, String passwordNew) {
-        User user = userRepository.findByNikNameIgnoreCase(username).orElseThrow(() -> new ResourceNotFoundRunTime("Пользователь не найден"));
-        if (!checkPassword(passwordOld, user.getPassword())) {
-            throw new ResourceNotFoundRunTime("Старый пароль не действителен");
-        }
-
+    public boolean changePassword(User user, String passwordNew) {
         if (passwordNew == null || passwordNew.isEmpty()) {
             throw new ResourceNotFoundRunTime("Новый пароль не должен быть пустым");
         }
@@ -194,6 +188,15 @@ public class UserService {
         user.setPasswordChange(false);
         user = saveUser(user);
         return user != null;
+    }
+
+    @Transactional
+    public boolean changePassword(String username, String passwordOld, String passwordNew) {
+        User user = userRepository.findByNikNameIgnoreCase(username).orElseThrow(() -> new ResourceNotFoundRunTime("Пользователь не найден"));
+        if (!checkPassword(passwordOld, user.getPassword())) {
+            throw new ResourceNotFoundRunTime("Старый пароль не действителен");
+        }
+        return changePassword(user, passwordNew);
     }
 
     @Transactional
@@ -210,16 +213,21 @@ public class UserService {
 
     @Transactional
     public void getRestorePassword(String nikName, String email) {
-        User user = loadUserByNikName(nikName);
-        if (email != null && email.equals(user.getEmail())) {
-            setNewEmailCode(user);
-            userRepository.save(user);
-            defaultEmailService.sendSimpleEmail(user.getEmail(), "Восстановление доступа", "Для восстановления пароля перейдите по ссылке" + UrlService.getUrlRecovery(user.getNikName(), getHash(user)));
+        try {
 
-        } else {
-            throw new ResourceNotFoundRunTime("Почта не совпадает");
+
+            User user = loadUserByNikName(nikName);
+            if (email != null && email.equals(user.getEmail())) {
+                setNewEmailCode(user);
+                userRepository.save(user);
+                defaultEmailService.sendSimpleEmail(user.getEmail(), "Восстановление доступа", "Для восстановления пароля перейдите по " + UrlService.getUrlRecovery(user.getNikName(), getHash(user)));
+
+            } else {
+                throw new ResourceNotFoundRunTime("Почта не совпадает");
+            }
+        } catch (UsernameNotFoundException ex){
+            throw new ResourceNotFoundRunTime(ex.getMessage());
         }
-
     }
     @Transactional
     public boolean restorePassword(String nikName, String code) {
@@ -233,8 +241,27 @@ public class UserService {
         return false;
     }
 
+    @Transactional
+    public boolean recoveryPassword(String username, String code, String passwordNew) {
+        User user = userRepository.findByNikNameIgnoreCase(username).orElseThrow(() -> new ResourceNotFoundRunTime("Пользователь не найден"));
+        if (!code.equals(getHash(user))) {
+            throw new ResourceNotFoundRunTime("Код не действителен.");
+        }
+        return changePassword(user, passwordNew);
+    }
+
     public String getHash(User user) {
         return HashService.getSHA256(user.hashCode() + ":" + codePas);
     }
 
+    public void sendCode(String id) {
+        User user = userRepository
+                .findByNikNameIgnoreCase(id)
+                .orElse(userRepository.findByEmailIgnoreCase(id).orElseThrow(() -> new ResourceNotFoundRunTime("Не найден пользователь по " + id)));
+        sendCode(user);
+    }
+
+    public void sendCode(User user) {
+        defaultEmailService.sendSimpleEmail(user.getNewEmail(), "Подтверждение почты", "Для подтверждения почты перейдите по " + UrlService.getUrlNewUser(user.getNikName(), getHash(user)));
+    }
 }

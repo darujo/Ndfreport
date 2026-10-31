@@ -29,16 +29,17 @@ spring:
       mode: always
 
   mail:
-    host: smtp.rambler.ru
-    port: 465
+    host: smtp.mail.ru
+#    port: 465
 #    port: 587
-    username: radies@rambler.ru
-    password: +!@
+    port: 2525
+    username: rubanda@internet.ru
+    password: ptSBPlO9BcIlugK9hSbV
     properties:
       mail:
         smtp:
            auth: true
-           ssl:
-             enable: true
-#           starttls:
-#              enable: true
+#           ssl:
+#             enable: true
+           starttls:
+              enable: true

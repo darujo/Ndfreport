@@ -43,7 +43,7 @@ public class User {
     @Column(name = "code_email")
     private String codeEmail;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email")
     private String email;
 
     @Column(name = "email_new", nullable = false)

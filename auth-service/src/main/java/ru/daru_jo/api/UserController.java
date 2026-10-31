@@ -51,6 +51,15 @@ public class UserController {
                         user.getTextPassword()));
     }
 
+    @PostMapping("/user/create")
+    public UserEditDto createUser(@RequestBody UserEditDto user) {
+        user.setId(null);
+        return UserConvertor.getUserEditDto(
+                userService.saveUser(
+                        UserConvertor.getUser(user),
+                        user.getTextPassword()));
+    }
+
     @GetMapping("/user")
     public ResponseEntity<?> getUserDto(@RequestParam(required = false) String nikName) {
         try {
@@ -94,20 +103,34 @@ public class UserController {
         return userService.checkPassword(passwordText, passwordHash);
     }
 
-    @GetMapping("/user/password/recovery")
+    @GetMapping("/system/user/password/request")
     public void getPasswordRecovery(@RequestParam String nikName,
                                     @RequestParam String email) {
         userService.getRestorePassword(nikName, email);
     }
 
-    @GetMapping("/user/password/restore")
+    @GetMapping("/user/password/recovery")
+    public boolean passwordRecovery(@RequestHeader(required = false) String username,
+                                    @RequestParam String code,
+                                    @RequestParam String passwordNew) {
+        return userService.recoveryPassword(username, code, passwordNew);
+
+    }
+
+    @GetMapping("/system/user/password/restore")
     public JwtResponse getPasswordRestore(@RequestParam String nikName,
                                           @RequestParam String code) {
         return authService.restorePassword(nikName, code);
     }
 
-    @GetMapping("/user/Email/confirm")
-    public boolean confirmEmail(String nikName, String code){
+    @GetMapping("/system/user/email/confirm")
+    public boolean confirmEmail(@RequestParam String nikName,
+                                @RequestParam String code){
         return userService.confirmEmail(nikName,code);
+    }
+
+    @GetMapping("/system/user/email/code")
+    public void emailSendCode(@RequestParam String id){
+        userService.sendCode(id);
     }
 }

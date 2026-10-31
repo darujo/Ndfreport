@@ -11,5 +11,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends CrudRepository<@NonNull User, @NonNull Long>, JpaSpecificationExecutor<@NonNull User> {
     Optional<User> findByNikNameIgnoreCase(String nikName);
+    Optional<User> findByEmailIgnoreCase(String email);
     Optional<User> findByNikNameIgnoreCaseAndIdIsNot(String nikName, Long id);
 }

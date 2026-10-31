@@ -47,6 +47,13 @@ spring:
             #                - JwtAdminFilter
             #                - StripPrefix=1
             #                            - PrefixPath=system/
+            - id: user-not-auch
+              uri: "http://localhost:8283"
+              predicates:
+                - Path=/users/system/**
+              filters:
+                - StripPrefix=0
+                - PrefixPath=/app-auth/
             - id: user-admin-service
               uri: "http://localhost:8283"
               predicates:
@@ -54,6 +61,7 @@ spring:
               filters:
                 - StripPrefix=0
                 - PrefixPath=/app-auth/
+                - JwtAuthFilter
             - id: udaru
               uri: "http://localhost:8080"
               predicates:

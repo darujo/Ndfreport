@@ -1,0 +1,16 @@
+<div id="UserList" class="head_text_elem">
+    <p>Востановление пароля</p>
+    <form class="" ng-submit="requestPass()">
+        <label for="NikName" class="form_label">Логин:</label>
+        <input class="vvod80mar10" type="text" id="NikName" step="any"
+               ng-model="User.nikName" placeholder="Введите логин" required/>
+        <br>
+        <label for="Email" class="form_label">Почта:</label>
+        <input class="vvod80mar10" type="email" id="Email" step="any"
+               ng-model="User.email" placeholder="Введите почту указанную в учетной записи" required/>
+        <div class="horiz">
+            <button type="submit" class="button" id="ButtonSaveDown">Восстановить</button>
+            <button type="button" ng-click="back()" class="button">Назад</button>
+        </div>
+    </form>
+</div>

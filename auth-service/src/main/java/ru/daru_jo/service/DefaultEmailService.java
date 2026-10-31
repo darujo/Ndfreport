@@ -2,17 +2,19 @@ package ru.daru_jo.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
+import ru.daru_jo.exceptions.ResourceNotFoundRunTime;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 
+@Slf4j
 @Service
 public class DefaultEmailService{
 
@@ -24,25 +26,33 @@ public class DefaultEmailService{
         this.emailSender = emailSender;
     }
 
-    public void sendSimpleEmail(String toAddress, String subject, String message) {
-
-        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        simpleMailMessage.setFrom(senderEmail);
-        simpleMailMessage.setTo(toAddress);
-        simpleMailMessage.setSubject(subject);
-        simpleMailMessage.setText(message);
-        emailSender.send(simpleMailMessage);
+    public void sendSimpleEmail(String toAddress, String subject, String message) throws RuntimeException {
+        sendSimpleEmail(new String[]{toAddress},subject, message);
     }
 
-    public void sendEmailWithAttachment(String toAddress, String subject, String message, String attachment) throws MessagingException, FileNotFoundException {
+    public void sendSimpleEmail(String[] toAddress, String subject, String message) throws RuntimeException {
 
-        MimeMessage mimeMessage = emailSender.createMimeMessage();
-        MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true);
-        messageHelper.setTo(toAddress);
-        messageHelper.setSubject(subject);
-        messageHelper.setText(message);
-        FileSystemResource file = new FileSystemResource(ResourceUtils.getFile(attachment));
-        messageHelper.addAttachment("Purchase Order", file);
-        emailSender.send(mimeMessage);
+        try {
+            sendEmailWithAttachment(toAddress, subject, message, null, null);
+        } catch (FileNotFoundException | MessagingException ex) {
+            log.error("Не получилось отправить письмо", ex);
+        }
+    }
+
+    public void sendEmailWithAttachment(String[] toAddress, String subject, String message, String fileName, byte[] file) throws FileNotFoundException, MessagingException {
+        try {
+            MimeMessage mimeMessage = emailSender.createMimeMessage();
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            messageHelper.setFrom(senderEmail);
+            messageHelper.setTo(toAddress);
+            messageHelper.setSubject(subject);
+            messageHelper.setText(message, true);
+            if (fileName != null && file != null) {
+                messageHelper.addAttachment(fileName, () -> new ByteArrayInputStream(file));
+            }
+            emailSender.send(mimeMessage);
+        } catch (MailSendException ex) {
+            throw new ResourceNotFoundRunTime(ex.getMessage());
+        }
     }
 }

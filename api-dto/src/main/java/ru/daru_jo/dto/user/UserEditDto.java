@@ -1,6 +1,7 @@
 package ru.daru_jo.dto.user;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 
@@ -10,6 +11,7 @@ public class UserEditDto implements Serializable {
     }
 
     @Getter
+    @Setter
     private Long id;
     @Getter
     private String nikName;
